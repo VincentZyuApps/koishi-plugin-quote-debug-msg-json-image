@@ -83,7 +83,7 @@ function generateForwardMessage(formattedJson: string, imageBuffer: Buffer, maxJ
   return `<message forward>\n${messages}\n</message>`
 }
 
-export function apply(ctx: Context) {
+export function apply(ctx: Context, cfg: Config) {
   // write your plugin here
 
   ctx.command("dump_json")
@@ -123,7 +123,7 @@ ${formattedJson}
         const imageBuffer = await ctx.markdownToImage.convertToImage(markdown);
 
         // 生成合并转发消息（包含图片）
-        const forwardMessage = generateForwardMessage(formattedJson, imageBuffer, options?.maxJsonTextLength ?? ctx.config.maxJsonTextLength ?? 2000);
+        const forwardMessage = generateForwardMessage(formattedJson, imageBuffer, cfg.maxJsonTextLength ?? 2000);
         // 发送合并转发消息
         await session.send(forwardMessage);
 
