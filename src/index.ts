@@ -9,6 +9,7 @@ export const inject = {
 
 export interface Config {
   useNapcatGetMsgInsteadOnOnebot: boolean
+  maxJsonTextLength: number
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -17,14 +18,21 @@ export const Config: Schema<Config> = Schema.intersect([
     useNapcatGetMsgInsteadOnOnebot: Schema.boolean()
     .default(true)
     .description('如果是onebot平台，那么msgObj使用Napcat的get_msg接口获取，而不是koishi的await session.bot.getMessage(')
-  })
+  }).description('调用的api设置'),
+
+  Schema.object({
+    maxJsonTextLength: Schema.number()
+    .default(2222)
+    .min(50).max(10000).step(1)
+    .description('JSON文本的最大显示长度，超过该长度将被截断')
+  }).description('发送的消息设置')
 
 ])
 
 /**
  * 生成合并转发消息
  */
-function generateForwardMessage(formattedJson: string, imageBuffer: Buffer): string {
+function generateForwardMessage(formattedJson: string, imageBuffer: Buffer, maxJsonTextLength: number): string {
   let messages = ''
   
   const addMessageBlock = (authorName: string, content: string) => {
@@ -41,13 +49,13 @@ function generateForwardMessage(formattedJson: string, imageBuffer: Buffer): str
     [
       `⏰ 查询时间: ${new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`,
       `━━━━━━━━━━━━━━━━━━━━━`,
-      `📊 以下是消息的JSON数据（前2000字符）`
+      `📊 以下是消息的JSON数据（前${maxJsonTextLength}字符）`
     ].join('\n')
   )
   
-  // 第二条消息：JSON内容（前2000字符）
-  const jsonPreview = formattedJson.length > 2000 
-    ? formattedJson.substring(0, 2000) + '\n...\n(内容过长，已截断)'
+  // 第二条消息：JSON内容（前maxJsonTextLength字符）
+  const jsonPreview = formattedJson.length > maxJsonTextLength 
+    ? formattedJson.substring(0, maxJsonTextLength) + '\n...\n(内容过长，已截断)'
     : formattedJson
   
   addMessageBlock(
@@ -61,8 +69,8 @@ function generateForwardMessage(formattedJson: string, imageBuffer: Buffer): str
     [
       `━━━━━━━━━━━━━━━━━━━━━`,
       `📏 JSON总长度: ${formattedJson.length} 字符`,
-      `📄 显示长度: ${Math.min(formattedJson.length, 2000)} 字符`,
-      `✂️ 是否截断: ${formattedJson.length > 2000 ? '是' : '否'}`
+      `📄 显示长度: ${Math.min(formattedJson.length, maxJsonTextLength)} 字符`,
+      `✂️ 是否截断: ${formattedJson.length > maxJsonTextLength ? '是' : '否'}`
     ].join('\n')
   )
   
@@ -115,7 +123,7 @@ ${formattedJson}
         const imageBuffer = await ctx.markdownToImage.convertToImage(markdown);
 
         // 生成合并转发消息（包含图片）
-        const forwardMessage = generateForwardMessage(formattedJson, imageBuffer);
+        const forwardMessage = generateForwardMessage(formattedJson, imageBuffer, options?.maxJsonTextLength ?? ctx.config.maxJsonTextLength ?? 2000);
         // 发送合并转发消息
         await session.send(forwardMessage);
 
