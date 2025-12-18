@@ -1,0 +1,325 @@
+{
+    "status": "ok",
+    "retcode": 0,
+    "data": {
+        "self_id": 3967912008,
+        "user_id": 1830540513,
+        "time": 1766055858,
+        "message_id": 257545546,
+        "message_seq": 257545546,
+        "real_id": 257545546,
+        "real_seq": "151905",
+        "message_type": "group",
+        "sender": {
+            "user_id": 1830540513,
+            "nickname": "VincentZyu",
+            "card": "",
+            "role": "admin"
+        },
+        "raw_message": "[CQ:forward,id=7585152154320672316,content=&#91;object Object&#93;&#44;&#91;object Object&#93;&#44;&#91;object Object&#93;&#44;&#91;object Object&#93;&#44;&#91;object Object&#93;]",
+        "font": 14,
+        "sub_type": "normal",
+        "message": [
+            {
+                "type": "forward",
+                "data": {
+                    "id": "7585152154320672316",
+                    "content": [
+                        {
+                            "self_id": 3967912008,
+                            "user_id": 1830540513,
+                            "time": 1766055408,
+                            "message_id": 873732554,
+                            "message_seq": 873732554,
+                            "real_id": 873732554,
+                            "real_seq": "151888",
+                            "message_type": "group",
+                            "sender": {
+                                "user_id": 1830540513,
+                                "nickname": "VincentZyu",
+                                "card": ""
+                            },
+                            "raw_message": "[CQ:forward,id=7585152154320672321,content=&#91;object Object&#93;&#44;&#91;object Object&#93;&#44;&#91;object Object&#93;&#44;&#91;object Object&#93;]",
+                            "font": 14,
+                            "sub_type": "normal",
+                            "message": [
+                                {
+                                    "type": "forward",
+                                    "data": {
+                                        "id": "7585152154320672321",
+                                        "content": [
+                                            {
+                                                "self_id": 3967912008,
+                                                "user_id": 1094950020,
+                                                "time": 1766054983,
+                                                "message_id": 1978611015,
+                                                "message_seq": 1978611015,
+                                                "real_id": 1978611015,
+                                                "real_seq": "151871",
+                                                "message_type": "group",
+                                                "sender": {
+                                                    "user_id": 1094950020,
+                                                    "nickname": "oʇdı̣ɹꓘ",
+                                                    "card": ""
+                                                },
+                                                "raw_message": "[CQ:image,summary=&#91;动画表情&#93;,file=78B40C59C6B40B16D929E774B0D04ACE.png,sub_type=1,url=https://multimedia.nt.qq.com.cn/download?appid=1407&amp;fileid=EhTUToISr1l6uI3lzHDaIj8_haU5wxitoVog_woovY6a4P7GkQMyBHByb2RQgL2jAVoQTJBlXh1Y7YKRpfjUdjCwBXoClSKCAQJneg&amp;rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA,file_size=1478829]",
+                                                "font": 14,
+                                                "sub_type": "normal",
+                                                "message": [
+                                                    {
+                                                        "type": "image",
+                                                        "data": {
+                                                            "summary": "[动画表情]",
+                                                            "file": "78B40C59C6B40B16D929E774B0D04ACE.png",
+                                                            "sub_type": 1,
+                                                            "url": "https://multimedia.nt.qq.com.cn/download?appid=1407&fileid=EhTUToISr1l6uI3lzHDaIj8_haU5wxitoVog_woovY6a4P7GkQMyBHByb2RQgL2jAVoQTJBlXh1Y7YKRpfjUdjCwBXoClSKCAQJneg&rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA",
+                                                            "file_size": "1478829"
+                                                        }
+                                                    }
+                                                ],
+                                                "message_format": "array",
+                                                "post_type": "message",
+                                                "group_id": 284840486,
+                                                "group_name": ""
+                                            },
+                                            {
+                                                "self_id": 3967912008,
+                                                "user_id": 1830540513,
+                                                "time": 1766054987,
+                                                "message_id": 938997034,
+                                                "message_seq": 938997034,
+                                                "real_id": 938997034,
+                                                "real_seq": "151872",
+                                                "message_type": "group",
+                                                "sender": {
+                                                    "user_id": 1830540513,
+                                                    "nickname": "VincentZyu",
+                                                    "card": ""
+                                                },
+                                                "raw_message": "[CQ:image,file=78B40C59C6B40B16D929E774B0D04ACE.png,sub_type=0,url=https://multimedia.nt.qq.com.cn/download?appid=1407&amp;fileid=EhTUToISr1l6uI3lzHDaIj8_haU5wxitoVog_woozZmj4P7GkQMyBHByb2RQgL2jAVoQR6N4ZtzZSGwv0_Idz9jzA3oC4ZuCAQJneg&amp;rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA,file_size=1478829]",
+                                                "font": 14,
+                                                "sub_type": "normal",
+                                                "message": [
+                                                    {
+                                                        "type": "image",
+                                                        "data": {
+                                                            "summary": "",
+                                                            "file": "78B40C59C6B40B16D929E774B0D04ACE.png",
+                                                            "sub_type": 0,
+                                                            "url": "https://multimedia.nt.qq.com.cn/download?appid=1407&fileid=EhTUToISr1l6uI3lzHDaIj8_haU5wxitoVog_woozZmj4P7GkQMyBHByb2RQgL2jAVoQR6N4ZtzZSGwv0_Idz9jzA3oC4ZuCAQJneg&rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA",
+                                                            "file_size": "1478829"
+                                                        }
+                                                    }
+                                                ],
+                                                "message_format": "array",
+                                                "post_type": "message",
+                                                "group_id": 284840486,
+                                                "group_name": ""
+                                            },
+                                            {
+                                                "self_id": 3967912008,
+                                                "user_id": 1830540513,
+                                                "time": 1766054991,
+                                                "message_id": 1133862026,
+                                                "message_seq": 1133862026,
+                                                "real_id": 1133862026,
+                                                "real_seq": "151874",
+                                                "message_type": "group",
+                                                "sender": {
+                                                    "user_id": 1830540513,
+                                                    "nickname": "VincentZyu",
+                                                    "card": ""
+                                                },
+                                                "raw_message": "where",
+                                                "font": 14,
+                                                "sub_type": "normal",
+                                                "message": [
+                                                    {
+                                                        "type": "text",
+                                                        "data": {
+                                                            "text": "where"
+                                                        }
+                                                    }
+                                                ],
+                                                "message_format": "array",
+                                                "post_type": "message",
+                                                "group_id": 284840486,
+                                                "group_name": ""
+                                            },
+                                            {
+                                                "self_id": 3967912008,
+                                                "user_id": 1830540513,
+                                                "time": 1766054995,
+                                                "message_id": 1029097313,
+                                                "message_seq": 1029097313,
+                                                "real_id": 1029097313,
+                                                "real_seq": "151875",
+                                                "message_type": "group",
+                                                "sender": {
+                                                    "user_id": 1830540513,
+                                                    "nickname": "VincentZyu",
+                                                    "card": ""
+                                                },
+                                                "raw_message": "which",
+                                                "font": 14,
+                                                "sub_type": "normal",
+                                                "message": [
+                                                    {
+                                                        "type": "text",
+                                                        "data": {
+                                                            "text": "which"
+                                                        }
+                                                    }
+                                                ],
+                                                "message_format": "array",
+                                                "post_type": "message",
+                                                "group_id": 284840486,
+                                                "group_name": ""
+                                            }
+                                        ]
+                                    }
+                                }
+                            ],
+                            "message_format": "array",
+                            "post_type": "message",
+                            "group_id": 284840486,
+                            "group_name": ""
+                        },
+                        {
+                            "self_id": 3967912008,
+                            "user_id": 1830540513,
+                            "time": 1766055825,
+                            "message_id": 2007617922,
+                            "message_seq": 2007617922,
+                            "real_id": 2007617922,
+                            "real_seq": "151901",
+                            "message_type": "group",
+                            "sender": {
+                                "user_id": 1830540513,
+                                "nickname": "VincentZyu",
+                                "card": ""
+                            },
+                            "raw_message": "6",
+                            "font": 14,
+                            "sub_type": "normal",
+                            "message": [
+                                {
+                                    "type": "text",
+                                    "data": {
+                                        "text": "6"
+                                    }
+                                }
+                            ],
+                            "message_format": "array",
+                            "post_type": "message",
+                            "group_id": 284840486,
+                            "group_name": ""
+                        },
+                        {
+                            "self_id": 3967912008,
+                            "user_id": 1830540513,
+                            "time": 1766055848,
+                            "message_id": 1124464026,
+                            "message_seq": 1124464026,
+                            "real_id": 1124464026,
+                            "real_seq": "151902",
+                            "message_type": "group",
+                            "sender": {
+                                "user_id": 1830540513,
+                                "nickname": "VincentZyu",
+                                "card": ""
+                            },
+                            "raw_message": "[CQ:image,summary=&#91;动画表情&#93;,file=7D19590E8CA071DF5616BDF30811C083.jpg,sub_type=1,url=https://multimedia.nt.qq.com.cn/download?appid=1407&amp;fileid=EhQWOId4g-lEknxHgsybCWilNxvnhhibswIg_woosIOa4P7GkQMyBHByb2RQgL2jAVoQ64Uph-r8dfW9ut1Y3eIb_noCfq-CAQJneg&amp;rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA,file_size=39323]",
+                            "font": 14,
+                            "sub_type": "normal",
+                            "message": [
+                                {
+                                    "type": "image",
+                                    "data": {
+                                        "summary": "[动画表情]",
+                                        "file": "7D19590E8CA071DF5616BDF30811C083.jpg",
+                                        "sub_type": 1,
+                                        "url": "https://multimedia.nt.qq.com.cn/download?appid=1407&fileid=EhQWOId4g-lEknxHgsybCWilNxvnhhibswIg_woosIOa4P7GkQMyBHByb2RQgL2jAVoQ64Uph-r8dfW9ut1Y3eIb_noCfq-CAQJneg&rkey=CAQSMKdFU2t-_szNoY9gm2PKcPeB7ulvh-Ka2S9Flk3tGO9DuwHm93VgQ2x9rKbmIYGWbA",
+                                        "file_size": "39323"
+                                    }
+                                }
+                            ],
+                            "message_format": "array",
+                            "post_type": "message",
+                            "group_id": 284840486,
+                            "group_name": ""
+                        },
+                        {
+                            "self_id": 3967912008,
+                            "user_id": 1830540513,
+                            "time": 1766055849,
+                            "message_id": 1525458772,
+                            "message_seq": 1525458772,
+                            "real_id": 1525458772,
+                            "real_seq": "151903",
+                            "message_type": "group",
+                            "sender": {
+                                "user_id": 1830540513,
+                                "nickname": "VincentZyu",
+                                "card": ""
+                            },
+                            "raw_message": "1",
+                            "font": 14,
+                            "sub_type": "normal",
+                            "message": [
+                                {
+                                    "type": "text",
+                                    "data": {
+                                        "text": "1"
+                                    }
+                                }
+                            ],
+                            "message_format": "array",
+                            "post_type": "message",
+                            "group_id": 284840486,
+                            "group_name": ""
+                        },
+                        {
+                            "self_id": 3967912008,
+                            "user_id": 1830540513,
+                            "time": 1766055849,
+                            "message_id": 521194934,
+                            "message_seq": 521194934,
+                            "real_id": 521194934,
+                            "real_seq": "151904",
+                            "message_type": "group",
+                            "sender": {
+                                "user_id": 1830540513,
+                                "nickname": "VincentZyu",
+                                "card": ""
+                            },
+                            "raw_message": "2",
+                            "font": 14,
+                            "sub_type": "normal",
+                            "message": [
+                                {
+                                    "type": "text",
+                                    "data": {
+                                        "text": "2"
+                                    }
+                                }
+                            ],
+                            "message_format": "array",
+                            "post_type": "message",
+                            "group_id": 284840486,
+                            "group_name": ""
+                        }
+                    ]
+                }
+            }
+        ],
+        "message_format": "array",
+        "post_type": "message",
+        "group_id": 259248174,
+        "group_name": "1水_qwq群"
+    },
+    "message": "",
+    "wording": "",
+    "echo": 1134,
+    "stream": "normal-action"
+}

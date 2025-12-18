@@ -1,138 +1,130 @@
-import { Context, Schema, h } from 'koishi'
-import {} from 'koishi-plugin-markdown-to-image-service'
+import { Context, Schema } from 'koishi'
+import { } from 'koishi-plugin-markdown-to-image-service'
+import { } from 'koishi-plugin-puppeteer'
+import { registerDumpJsonCommand } from './dump-json'
+import { registerRenderForwardCommand } from './render-forward'
 
 export const name = 'quote-debug-msg-json-image'
 
 export const inject = {
   required: ['markdownToImage'],
+  optional: ['puppeteer'],
+}
+
+export interface ThemeColors {
+  bg: string
+  cardBg: string
+  cardBorder: string
+  cardShadow: string
+  mainText: string
+  subText: string
+  titleColor: string
+  headerBg: string
+  messageBg: string
+  messageBorder: string
+  senderColor: string
+  timeColor: string
+  atColor: string
+  faceColor: string
+  imageLabel: string
+  nestedBg: string
+  nestedBorder: string
+  nestedHeaderBg: string
 }
 
 export interface Config {
   useNapcatGetMsgInsteadOnOnebot: boolean
   maxJsonTextLength: number
+  dumpJsonCommandName: string
+  dumpYamlCommandName: string
+  dumpTomlCommandName: string
+  maxForwardNestDepth: number
+  renderForwardCommandName: string
+  theme: ThemeColors
+}
+
+// 默认粉色系主题 - 灵感来自真寻
+const defaultTheme: ThemeColors = {
+  bg: '#ffecd2',
+  cardBg: '#ffffff',
+  cardBorder: '#ffb6c1',
+  cardShadow: '#ff6987',
+  mainText: '#4a4a4a',
+  subText: '#888888',
+  titleColor: '#e91e63',
+  headerBg: '#f06292',
+  messageBg: '#fff5f8',
+  messageBorder: '#fce4ec',
+  senderColor: '#d81b60',
+  timeColor: '#b0a0a8',
+  atColor: '#ec407a',
+  faceColor: '#ff7043',
+  imageLabel: '#ad8b9e',
+  nestedBg: '#fce4ec',
+  nestedBorder: '#f8bbd9',
+  nestedHeaderBg: '#f06292',
 }
 
 export const Config: Schema<Config> = Schema.intersect([
 
   Schema.object({
     useNapcatGetMsgInsteadOnOnebot: Schema.boolean()
-    .default(true)
-    .description('如果是onebot平台，那么msgObj使用Napcat的get_msg接口获取，而不是koishi的await session.bot.getMessage(')
+      .default(true)
+      .description('如果是onebot平台，那么msgObj使用Napcat的get_msg接口获取，而不是koishi的await session.bot.getMessage(')
   }).description('调用的api设置'),
 
   Schema.object({
     maxJsonTextLength: Schema.number()
-    .default(2222)
-    .min(50).max(10000).step(1)
-    .description('JSON文本的最大显示长度，超过该长度将被截断')
-  }).description('发送的消息设置')
+      .default(2222)
+      .min(50).max(10000).step(1)
+      .description('JSON/YAML/TOML文本的最大显示长度，超过该长度将被截断'),
+    dumpJsonCommandName: Schema.string()
+      .default('dump-json')
+      .description('dump-json指令的名称，可自定义'),
+    dumpYamlCommandName: Schema.string()
+      .default('dump-yaml')
+      .description('dump-yaml指令的名称，可自定义'),
+    dumpTomlCommandName: Schema.string()
+      .default('dump-toml')
+      .description('dump-toml指令的名称，可自定义'),
+  }).description('dump指令设置'),
+
+  Schema.object({
+    maxForwardNestDepth: Schema.number()
+      .default(3)
+      .min(1).max(10).step(1)
+      .description('转发消息的最大嵌套深度，超过该深度将省略, 只显示[合并转发]'),
+    renderForwardCommandName: Schema.string()
+      .default('render-forward')
+      .description('render-forward指令的名称，可自定义'),
+    theme: Schema.object({
+      bg: Schema.string().role('color').default(defaultTheme.bg).description('背景色'),
+      cardBg: Schema.string().role('color').default(defaultTheme.cardBg).description('卡片背景色'),
+      cardBorder: Schema.string().role('color').default(defaultTheme.cardBorder).description('卡片边框色'),
+      cardShadow: Schema.string().role('color').default(defaultTheme.cardShadow).description('卡片阴影色'),
+      mainText: Schema.string().role('color').default(defaultTheme.mainText).description('主文本色'),
+      subText: Schema.string().role('color').default(defaultTheme.subText).description('次要文本色'),
+      titleColor: Schema.string().role('color').default(defaultTheme.titleColor).description('标题色'),
+      headerBg: Schema.string().role('color').default(defaultTheme.headerBg).description('头部背景色'),
+      messageBg: Schema.string().role('color').default(defaultTheme.messageBg).description('消息背景色'),
+      messageBorder: Schema.string().role('color').default(defaultTheme.messageBorder).description('消息边框色'),
+      senderColor: Schema.string().role('color').default(defaultTheme.senderColor).description('发送者名称色'),
+      timeColor: Schema.string().role('color').default(defaultTheme.timeColor).description('时间文本色'),
+      atColor: Schema.string().role('color').default(defaultTheme.atColor).description('@提及色'),
+      faceColor: Schema.string().role('color').default(defaultTheme.faceColor).description('表情色'),
+      imageLabel: Schema.string().role('color').default(defaultTheme.imageLabel).description('图片标签色'),
+      nestedBg: Schema.string().role('color').default(defaultTheme.nestedBg).description('嵌套转发背景色'),
+      nestedBorder: Schema.string().role('color').default(defaultTheme.nestedBorder).description('嵌套转发边框色'),
+      nestedHeaderBg: Schema.string().role('color').default(defaultTheme.nestedHeaderBg).description('嵌套转发头部背景色'),
+    }).description('渲染主题颜色配置')
+  }).description('render-forward指令设置'),
 
 ])
 
-/**
- * 生成合并转发消息
- */
-function generateForwardMessage(formattedJson: string, imageBuffer: Buffer, maxJsonTextLength: number): string {
-  let messages = ''
-  
-  const addMessageBlock = (authorName: string, content: string) => {
-    messages += `
-      <message>
-        <author name="${authorName}"/>
-        ${content}
-      </message>`
-  }
-  
-  // 第一条消息：说明
-  addMessageBlock(
-    '📋 消息JSON调试',
-    [
-      `⏰ 查询时间: ${new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}`,
-      `━━━━━━━━━━━━━━━━━━━━━`,
-      `📊 以下是消息的JSON数据（前${maxJsonTextLength}字符）`
-    ].join('\n')
-  )
-  
-  // 第二条消息：JSON内容（前maxJsonTextLength字符）
-  const jsonPreview = formattedJson.length > maxJsonTextLength 
-    ? formattedJson.substring(0, maxJsonTextLength) + '\n...\n(内容过长，已截断)'
-    : formattedJson
-  
-  addMessageBlock(
-    '📝 JSON数据',
-    jsonPreview
-  )
-  
-  // 第三条消息：统计信息
-  addMessageBlock(
-    '📈 数据统计',
-    [
-      `━━━━━━━━━━━━━━━━━━━━━`,
-      `📏 JSON总长度: ${formattedJson.length} 字符`,
-      `📄 显示长度: ${Math.min(formattedJson.length, maxJsonTextLength)} 字符`,
-      `✂️ 是否截断: ${formattedJson.length > maxJsonTextLength ? '是' : '否'}`
-    ].join('\n')
-  )
-  
-  // 第四条消息：完整JSON图片
-  addMessageBlock(
-    '🖼️ 完整JSON图片',
-    h.image(imageBuffer, 'image/png').toString()
-  )
-  
-  return `<message forward>\n${messages}\n</message>`
-}
-
 export function apply(ctx: Context, cfg: Config) {
-  // write your plugin here
+  // 注册 dump-json / dump-yaml / dump-toml 指令
+  registerDumpJsonCommand(ctx, cfg)
 
-  ctx.command("dump_json")
-    .action( async ( {session, options} ) => {
-
-      if ( !session.quote ) {
-        await session.send('请回复一条消息来使用此命令');
-        return;
-      }
-
-      try {
-        // const msgObj = await session.bot.getMessage(session.channelId, session.quote.messageId);
-        const msgObj = session.platform === 'onebot'
-          ? await session.bot.internal._request('get_msg',{message_id: session.quote.messageId})
-          : await session.bot.getMessage(session.channelId, session.quote.messageId);
-
-        // 格式化 JSON 为多行带缩进
-        const formattedJson = JSON.stringify(msgObj, null, 2);
-        
-        // 打印到日志
-        ctx.logger.info(`quote.message = ${formattedJson}`);
-
-        // 生成完整的图片版本，使用 HTML 标签调整字体大小
-        const markdown = `
-<style>
-  pre code {
-    font-size: 18px !important;
-    line-height: 1.3 !important;
-  }
-</style>
-
-# Quote Message Debug
-
-\`\`\`json
-${formattedJson}
-\`\`\``;
-        const imageBuffer = await ctx.markdownToImage.convertToImage(markdown);
-
-        // 生成合并转发消息（包含图片）
-        const forwardMessage = generateForwardMessage(formattedJson, imageBuffer, cfg.maxJsonTextLength ?? 2000);
-        // 发送合并转发消息
-        await session.send(forwardMessage);
-
-      } catch (err) {
-        const errmsg = `[dump_json] 获取消息或生成图片失败：${err}`;
-        ctx.logger.error(errmsg);
-        await session.send(errmsg);
-      }
-
-    } )
-
+  // 注册 render_forward 指令（需要 puppeteer）
+  registerRenderForwardCommand(ctx, cfg)
 }
