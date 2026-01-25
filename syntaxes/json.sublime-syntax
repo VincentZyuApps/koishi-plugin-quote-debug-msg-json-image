@@ -1,0 +1,28 @@
+%YAML 1.2
+---
+name: json
+scope: source.json
+file_extensions: [json]
+contexts:
+  main:
+    - match: '"'
+      scope: punctuation.definition.string.begin.json
+      push: string
+    - match: '\\b(true|false|null)\\b'
+      scope: constant.language.json
+    - match: '-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?'
+      scope: constant.numeric.json
+    - match: '[\\{\\}\\[\\]:,]'
+      scope: punctuation.separator.json
+    - match: '\\s+'
+      scope: whitespace
+
+  string:
+    - meta_scope: string.quoted.double.json
+    - match: '\\u[0-9A-Fa-f]{4}'
+      scope: constant.character.escape.json
+    - match: '\\.'
+      scope: constant.character.escape.json
+    - match: '"'
+      scope: punctuation.definition.string.end.json
+      pop: true

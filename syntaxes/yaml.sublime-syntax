@@ -1,0 +1,41 @@
+%YAML 1.2
+---
+name: yaml
+scope: source.yaml
+file_extensions: [yml, yaml]
+contexts:
+  main:
+    - match: '^\\s*[^\\s:#][^:#]*?(?=\\s*:)'
+      scope: entity.name.tag.yaml
+    - match: '"'
+      scope: punctuation.definition.string.begin.yaml
+      push: dstring
+    - match: "'"
+      scope: punctuation.definition.string.begin.yaml
+      push: sstring
+    - match: '\\b(true|false|null|~)\\b'
+      scope: constant.language.yaml
+    - match: '-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?'
+      scope: constant.numeric.yaml
+    - match: '#.*$'
+      scope: comment.line.number-sign.yaml
+    - match: '[\\-\\?\\:\\,\\[\\]\\{\\}]'
+      scope: punctuation.separator.yaml
+    - match: '\\s+'
+      scope: whitespace
+
+  dstring:
+    - meta_scope: string.quoted.double.yaml
+    - match: '\\.'
+      scope: constant.character.escape.yaml
+    - match: '"'
+      scope: punctuation.definition.string.end.yaml
+      pop: true
+
+  sstring:
+    - meta_scope: string.quoted.single.yaml
+    - match: "''"
+      scope: constant.character.escape.yaml
+    - match: "'"
+      scope: punctuation.definition.string.end.yaml
+      pop: true

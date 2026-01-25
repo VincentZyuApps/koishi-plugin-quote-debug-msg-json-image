@@ -1,0 +1,43 @@
+%YAML 1.2
+---
+name: toml
+scope: source.toml
+file_extensions: [toml]
+contexts:
+  main:
+    - match: '^\\s*\\[[^\\]]+\\]'
+      scope: entity.name.section.toml
+    - match: '^\\s*[^\\s#=]+(?=\\s*=)'
+      scope: variable.other.key.toml
+    - match: '"'
+      scope: punctuation.definition.string.begin.toml
+      push: dstring
+    - match: "'"
+      scope: punctuation.definition.string.begin.toml
+      push: sstring
+    - match: '\\b(true|false)\\b'
+      scope: constant.language.toml
+    - match: '-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?'
+      scope: constant.numeric.toml
+    - match: '#.*$'
+      scope: comment.line.number-sign.toml
+    - match: '[\\=\\,\\[\\]\\{\\}]'
+      scope: punctuation.separator.toml
+    - match: '\\s+'
+      scope: whitespace
+
+  dstring:
+    - meta_scope: string.quoted.double.toml
+    - match: '\\.'
+      scope: constant.character.escape.toml
+    - match: '"'
+      scope: punctuation.definition.string.end.toml
+      pop: true
+
+  sstring:
+    - meta_scope: string.quoted.single.toml
+    - match: "''"
+      scope: constant.character.escape.toml
+    - match: "'"
+      scope: punctuation.definition.string.end.toml
+      pop: true
