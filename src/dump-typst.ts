@@ -165,6 +165,37 @@ class TypstRenderer {
   }
 
   /**
+   * 修复 Typst 生成的 SVG 以兼容 resvg
+   * 
+   * Typst 的 SVG 输出使用 CSS 变量和 <use> 元素，resvg 不支持 CSS 变量。
+   * 解决方案：移除 CSS 变量样式规则，让颜色通过父元素的 fill 属性继承。
+   */
+  private fixSvgForResvg(svg: string): string {
+    // 移除 .outline_glyph 的 fill: var(--glyph_fill) 样式规则
+    // 这样颜色会从父元素 <g class="typst-text" fill="#color"> 继承
+    let fixed = svg.replace(
+      /\.outline_glyph\s+path,\s*\npath\.outline_glyph\s*{\s*\n\s*fill:\s*var\(--glyph_fill\);\s*\n\s*stroke:\s*var\(--glyph_stroke\);\s*\n}/g,
+      ''
+    )
+    // 备用匹配：更宽松的模式
+    fixed = fixed.replace(
+      /\.outline_glyph[^}]*fill:\s*var\(--glyph_fill\)[^}]*}/g,
+      ''
+    )
+    // 移除 transition 样式（resvg 不支持）
+    fixed = fixed.replace(
+      /\.outline_glyph[^}]*transition[^}]*}/g,
+      ''
+    )
+    // 移除 hover 样式（静态图片不需要）
+    fixed = fixed.replace(
+      /\.hover\s+\.typst-text\s*{[^}]*}/g,
+      ''
+    )
+    return fixed
+  }
+
+  /**
    * 将 Typst 代码编译为 SVG
    */
   private toSvg(content: string): string {
@@ -173,9 +204,31 @@ class TypstRenderer {
       if (this.cfg.verboseConsoleLog) {
         this.logger.info(`[Typst] 开始编译 Typst 代码，长度: ${content.length} 字符`)
       }
-      const result = compiler.svg({ mainFileContent: content })
+      let result = compiler.svg({ mainFileContent: content })
+      
+      // 修复 SVG 以兼容 resvg
+      result = this.fixSvgForResvg(result)
+      
       if (this.cfg.verboseConsoleLog) {
         this.logger.info(`[Typst] 编译完成，SVG 长度: ${result.length} 字符`)
+        // 检查 SVG 中的颜色
+        const colorMatches = result.match(/fill="#[0-9a-fA-F]{6}"/g) || []
+        const uniqueColors = [...new Set(colorMatches)]
+        this.logger.info(`[Typst] SVG 中的颜色: ${uniqueColors.join(', ')}`)
+        // 检查是否有语法高亮颜色
+        const highlightColors = ['#4b69c6', '#198810', '#b60157', '#d73948']
+        const foundHighlights = uniqueColors.filter(c => highlightColors.some(h => c.includes(h)))
+        if (foundHighlights.length > 0) {
+          this.logger.info(`[Typst] 找到语法高亮颜色: ${foundHighlights.join(', ')}`)
+        } else {
+          this.logger.warn(`[Typst] 警告: 未找到语法高亮颜色！`)
+        }
+        // 检查是否还有 CSS 变量
+        if (result.includes('var(--glyph')) {
+          this.logger.warn(`[Typst] 警告: SVG 中仍包含 CSS 变量！`)
+        } else {
+          this.logger.info(`[Typst] SVG 已修复，移除了 CSS 变量`)
+        }
       }
       return result
     } catch (err) {
@@ -212,7 +265,27 @@ class TypstRenderer {
 let sharedRenderer: TypstRenderer | null = null
 
 /**
+ * 为 fenced code block 转义数据中的反引号
+ * 如果数据中包含连续的反引号，需要增加围栏反引号的数量
+ */
+function escapeFencedCodeBlock(data: string): { fence: string; content: string } {
+  // 找出数据中最长的连续反引号序列
+  const backtickSequences = data.match(/`+/g) || []
+  let maxBackticks = 0
+  for (const seq of backtickSequences) {
+    if (seq.length > maxBackticks) {
+      maxBackticks = seq.length
+    }
+  }
+  // 围栏需要比数据中最长的反引号序列多至少一个
+  const fenceLength = Math.max(3, maxBackticks + 1)
+  const fence = '`'.repeat(fenceLength)
+  return { fence, content: data }
+}
+
+/**
  * 生成 Typst 渲染代码
+ * 使用 fenced code block 语法以支持语法高亮
  */
 function generateTypstCode(formattedData: string, format: FormatType, theme: TypstTheme, messageMode: 'forward' | 'image'): string {
   const formatName = getFormatDisplayName(format)
@@ -229,7 +302,9 @@ function generateTypstCode(formattedData: string, format: FormatType, theme: Typ
   // 转义标题和时间戳（这些是文本内容）
   const escapedFormatName = escapeTypstText(formatName)
   const escapedTimestamp = escapeTypstText(timestamp)
-  const dumpDataLiteral = JSON.stringify(formattedData)
+  
+  // 使用 fenced code block，并处理数据中可能的反引号
+  const { fence, content: codeContent } = escapeFencedCodeBlock(formattedData)
 
   return `#set page(
   width: 500pt,
@@ -258,8 +333,6 @@ function generateTypstCode(formattedData: string, format: FormatType, theme: Typ
   font: ("JetBrains Mono", "Fira Code", "Consolas", "LXGW WenKai Mono"),
   size: 9pt
 )
-
-#let dump_data = ${dumpDataLiteral}
 
 #align(center)[
   #block(
@@ -296,11 +369,9 @@ function generateTypstCode(formattedData: string, format: FormatType, theme: Typ
   
   #v(5pt)
   
-  #raw(
-    dump_data, 
-    block: true, 
-    lang: "${codeLang}"
-  )
+${fence}${codeLang}
+${codeContent}
+${fence}
   
   #v(5pt)
   
@@ -357,13 +428,17 @@ export async function renderTypstImage(
     logger.info(typstCode.substring(0, 500))
     logger.info(`[Typst] ... (总长度: ${typstCode.length} 字符)`)
     
-    // 查找并输出 #raw() 调用部分
-    const rawCallMatch = typstCode.match(/#raw\([^)]*\)/s)
-    if (rawCallMatch) {
-      logger.info(`[Typst] 找到 #raw() 调用：`)
-      logger.info(rawCallMatch[0])
+    // 查找并输出 fenced code block 部分
+    const fencedMatch = typstCode.match(/(`{3,})(\w+)\n([\s\S]*?)\1/s)
+    if (fencedMatch) {
+      logger.info(`[Typst] 找到 fenced code block：`)
+      logger.info(`[Typst] 围栏: ${fencedMatch[1]}, 语言: ${fencedMatch[2]}, 内容长度: ${fencedMatch[3].length}`)
+      logger.info(`[Typst] 代码块前 100 字符: ${fencedMatch[3].substring(0, 100)}`)
     } else {
-      logger.warn(`[Typst] 警告：未找到 #raw() 调用！`)
+      logger.warn(`[Typst] 警告：未找到 fenced code block！`)
+      // 输出代码中间部分帮助调试
+      const midStart = Math.max(0, typstCode.length / 2 - 200)
+      logger.info(`[Typst] 代码中间部分: ${typstCode.substring(midStart, midStart + 400)}`)
     }
   }
   

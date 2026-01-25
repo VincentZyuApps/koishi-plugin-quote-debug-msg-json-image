@@ -8,6 +8,7 @@ import * as dumpTypst from './dump-typst'
 import yaml from 'js-yaml'
 import TOML from '@iarna/toml'
 import { registerRenderForwardCommand } from './render-forward'
+import path from 'node:path'
 
 export const name = 'quote-debug-msg-json-image'
 
@@ -38,6 +39,9 @@ export interface Config {
   dumpTypstCodeBlockFillColor: string
   dumpTypstCodeBlockStrokeColor: string
   dumpTypstStatsTextColor: string
+  dumpJsonSyntaxPath: string
+  dumpYamlSyntaxPath: string
+  dumpTomlSyntaxPath: string
   // 📨 render-forward 指令设置
   maxForwardNestDepth: number
   renderForwardCommandName: string
@@ -136,6 +140,15 @@ export const Config: Schema<Config> = Schema.intersect([
       .role('color')
       .default('#8788a5')
       .description('📊 Typst 统计信息文字颜色'),
+    dumpJsonSyntaxPath: Schema.string()
+      .default(path.resolve(__dirname, '../syntaxes/json.sublime-syntax'))
+      .description('📄 JSON 语法高亮文件路径（sublime-syntax 格式）'),
+    dumpYamlSyntaxPath: Schema.string()
+      .default(path.resolve(__dirname, '../syntaxes/yaml.sublime-syntax'))
+      .description('📄 YAML 语法高亮文件路径（sublime-syntax 格式）'),
+    dumpTomlSyntaxPath: Schema.string()
+      .default(path.resolve(__dirname, '../syntaxes/toml.sublime-syntax'))
+      .description('📄 TOML 语法高亮文件路径（sublime-syntax 格式）'),
   }).description('🧾 dump 指令设置'),
 
   Schema.object({

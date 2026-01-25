@@ -252,8 +252,8 @@ function generateForwardHtmlTemplate(
     *{box-sizing:border-box;margin:0;padding:0;}
     body{margin:0;padding:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
     #content-wrapper{display:flex;justify-content:center;}
-    .card{width:920px;border-radius:32px;position:relative;z-index:2;display:flex;flex-direction:column;}
-    .header{padding:28px 40px;display:flex;flex-direction:column;gap:14px;text-align:center;}
+    .card{width:920px;border-radius:32px;position:relative;z-index:2;display:flex;flex-direction:column;overflow:hidden;}
+    .header{padding:28px 40px;display:flex;flex-direction:column;gap:14px;text-align:center;border-radius:32px 32px 0 0;}
     .title{font-size:36px;font-weight:800;letter-spacing:.5px;}
     .header-info{display:inline-flex;flex-direction:column;align-items:center;gap:8px;padding:14px 28px;border-radius:20px;}
     .subtitle{font-size:16px;font-weight:700;}
@@ -289,7 +289,7 @@ function generateForwardHtmlTemplate(
     .nested-sender-name{font-weight:700;font-size:13px;}
     .nested-message-time{font-size:12px;margin-left:auto;}
     .nested-message-content{font-size:14px;line-height:1.5;}
-    .footer{text-align:center;padding:18px;font-size:13px;}
+    .footer{text-align:center;padding:18px;font-size:13px;border-radius:0 0 32px 32px;}
     .timestamp-watermark{position:fixed;top:1.3px;left:1.3px;font-size:13px;color:rgba(128,128,128,.6);font-family:'Courier New',monospace;z-index:9999;pointer-events:none;text-shadow:0 0 2px rgba(255,255,255,.8);}
   `
 
