@@ -3,6 +3,7 @@ import {} from 'koishi-plugin-to-image-service'
 import {} from 'koishi-plugin-w-node'
 import type { Config } from './index'
 import path from 'node:path'
+import fs from 'node:fs'
 import type { NodeCompiler, NodeAddFontBlobs } from '@myriaddreamin/typst-ts-node-compiler'
 import type { Font, FontFormat } from 'koishi-plugin-to-image-service'
 
@@ -140,6 +141,27 @@ class TypstRenderer {
     }
 
     const fonts = this.ctx.toImageService.fontManagement.getFonts(this.fontFormats)
+    
+    // 尝试加载自定义字体
+    const customFontPath = this.cfg.dumpTypstFontPath
+    if (customFontPath && fs.existsSync(customFontPath)) {
+      try {
+        const customFontBuffer = fs.readFileSync(customFontPath)
+        fonts.push({
+          name: path.basename(customFontPath),
+          filePath: customFontPath,
+          data: customFontBuffer,
+          format: customFontPath.endsWith('.otf') ? 'otf' : 'ttf'
+        })
+        if (this.cfg.verboseConsoleLog) {
+          this.logger.info(`[Typst] 成功加载自定义字体: ${customFontPath}`)
+        }
+      } catch (err) {
+        this.logger.warn(`[Typst] 加载自定义字体失败: ${customFontPath}, 错误: ${err}`)
+      }
+    } else if (customFontPath) {
+      this.logger.warn(`[Typst] 自定义字体文件不存在: ${customFontPath}`)
+    }
     
     // 检查字体是否变化，如果变化则重新创建编译器
     if (
@@ -287,7 +309,7 @@ function escapeFencedCodeBlock(data: string): { fence: string; content: string }
  * 生成 Typst 渲染代码
  * 使用 fenced code block 语法以支持语法高亮
  */
-function generateTypstCode(formattedData: string, format: FormatType, theme: TypstTheme, messageMode: 'forward' | 'image'): string {
+function generateTypstCode(formattedData: string, format: FormatType, theme: TypstTheme, messageMode: 'forward' | 'image', cfg: Config): string {
   const formatName = getFormatDisplayName(format)
   const codeLang = getTypstCodeLang(format)
   const timestamp = new Date().toLocaleString('zh-CN', { 
@@ -420,7 +442,7 @@ export async function renderTypstImage(
   }
   await ensureTypstReady(sharedRenderer)
   const typstTheme = buildTypstTheme(cfg)
-  const typstCode = generateTypstCode(formattedData, format, typstTheme, messageMode)
+  const typstCode = generateTypstCode(formattedData, format, typstTheme, messageMode, cfg)
   
   if (cfg.verboseConsoleLog) {
     const logger = ctx.logger('quote-debug-typst')

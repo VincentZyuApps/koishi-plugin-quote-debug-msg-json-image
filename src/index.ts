@@ -9,12 +9,93 @@ import yaml from 'js-yaml'
 import TOML from '@iarna/toml'
 import { registerRenderForwardCommand } from './render-forward'
 import path from 'node:path'
+import fs from 'node:fs'
+
+// 读取 package.json 获取版本号
+const pkg = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8')
+)
 
 export const name = 'quote-debug-msg-json-image'
 
 export const inject = {
   required: ['markdownToImage', 'toImageService', 'node', 'puppeteer'],
 }
+
+export const usage = `
+<h1>📋 Koishi 插件：quote-debug-msg-json-image</h1>
+<h2>🎯 插件版本：v${pkg.version}</h2>
+
+<p>回复一条消息，将其渲染为精美的 JSON/YAML/TOML 格式图片。还支持渲染 OneBot 的合并转发消息为图片。</p>
+
+<p>插件使用问题 / Bug反馈 / 插件开发交流，欢迎加入QQ群：<b>259248174</b></p>
+
+<p><b>💡 提示：</b> <a href="https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image" target="_blank">前往 Gitee README 获得更佳观感 → <i>https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image</i></a></p>
+
+<hr>
+
+<h2 style="color: #f44336;">⚠️ 前置依赖（必须安装）</h2>
+
+<table>
+<thead>
+<tr><th>依赖插件</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><b>to-image-service</b> + <b>w-node</b></td><td>Typst 图片渲染（dump 指令）</td></tr>
+<tr><td><b>puppeteer</b></td><td>Puppeteer 图片渲染（render-forward 指令）</td></tr>
+<tr><td><b>markdown-to-image-service</b></td><td>Markdown 渲染备选方案</td></tr>
+</tbody>
+</table>
+
+<p style="color: #f44336;"><b>🔴 请确保以上插件已安装并启用，否则本插件无法正常工作！</b></p>
+
+<hr>
+
+<h2>✨ 功能特性</h2>
+<ul>
+<li>📋 <b>dump 指令</b>：将消息对象序列化为 JSON/YAML/TOML 格式，渲染成图片</li>
+<li>📨 <b>render-forward 指令</b>：将合并转发消息渲染成精美的图片</li>
+<li>🎨 <b>双渲染引擎</b>：支持 Typst（推荐）和 Markdown 两种渲染模式</li>
+<li>🌈 <b>代码语法高亮</b>：JSON/YAML/TOML 自动语法着色</li>
+<li>🧵 <b>嵌套转发支持</b>：智能处理多层嵌套的合并转发消息</li>
+</ul>
+
+<hr>
+
+<h2>📖 使用方法</h2>
+
+<h3>dump 指令</h3>
+<p>回复一条消息并发送指令：</p>
+<pre><code>
+dump-json          # 渲染为 JSON 格式图片
+</code></pre>
+<pre><code>
+dump-yaml          # 渲染为 YAML 格式图片
+</code></pre>
+<pre><code>
+dump-toml          # 渲染为 TOML 格式图片
+</code></pre>
+
+<p><b>可用选项：</b></p>
+<ul>
+<li><code>-r, --reply-mode &lt;typst|markdown&gt;</code> - 选择渲染引擎</li>
+<li><code>-m, --message-mode &lt;forward|image&gt;</code> - 回复模式（合并转发/仅图片）</li>
+<li><code>-s, --self</code> - 解析当前消息而非被引用的消息</li>
+</ul>
+
+<h3>render-forward 指令</h3>
+<p>回复一条合并转发消息并发送：</p>
+<pre><code>render-forward     # 渲染合并转发为图片</code></pre>
+
+<p><b>可用选项：</b></p>
+<ul>
+<li><code>-i, --index &lt;0|1&gt;</code> - 样式选择（0=Source Han Serif 毛玻璃风格, 1=LXGW WenKai 简约风格）</li>
+</ul>
+
+<hr>
+
+<p><b>📦 仓库地址：</b> <a href="https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image" target="_blank">Gitee</a></p>
+`
 
 export interface Config {
   // ⚙️ 基础设置
@@ -27,6 +108,7 @@ export interface Config {
   dumpTomlCommandName: string
   dumpRenderMode: 'typst' | 'markdown'
   dumpMessageMode: 'forward' | 'image'
+  dumpTypstFontPath: string
   dumpTypstRenderScale: number
   dumpTypstPageBgColor: string
   dumpTypstTextColor: string
@@ -58,7 +140,7 @@ export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
     enableQuote: Schema.boolean()
       .default(true)
-      .description('💬 是否在 bot 响应消息时引用触发消息（forward 合并转发除外，因为 onebot 不支持）'),
+      .description('💬 是否在 bot 响应消息时引用触发消息（forward 合并转发除外，因为 onebot 的 合并转发消息 不支持和quote消息段出现在同一个消息内）'),
     useNapcatGetMsgInsteadOnOnebot: Schema.boolean()
       .default(true)
       .description('🤖 如果是 onebot 平台，msgObj 使用 Napcat 的 get_msg 接口获取，而不是 koishi 的 await session.bot.getMessage(')
@@ -92,6 +174,10 @@ export const Config: Schema<Config> = Schema.intersect([
       .role('radio')
       .default('forward')
       .description('💬 dump 指令回复模式（作为 option 的默认值）'),
+    dumpTypstFontPath: Schema.string()
+      .default('/home/bawuyinguo/Fonts/LXGWWenKai/LXGWWenKaiMono-Medium.ttf')
+      .role('textarea', { rows: [2, 5] })
+      .description('🔤 Typst 渲染字体绝对路径（ttf/otf 格式）'),
     dumpTypstRenderScale: Schema.number()
       .default(2.33)
       .min(1).max(100).step(0.01)
@@ -142,12 +228,15 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('📊 Typst 统计信息文字颜色'),
     dumpJsonSyntaxPath: Schema.string()
       .default(path.resolve(__dirname, '../syntaxes/json.sublime-syntax'))
+      .role('textarea', { rows: [2, 5] })
       .description('📄 JSON 语法高亮文件路径（sublime-syntax 格式）'),
     dumpYamlSyntaxPath: Schema.string()
       .default(path.resolve(__dirname, '../syntaxes/yaml.sublime-syntax'))
+      .role('textarea', { rows: [2, 5] })
       .description('📄 YAML 语法高亮文件路径（sublime-syntax 格式）'),
     dumpTomlSyntaxPath: Schema.string()
       .default(path.resolve(__dirname, '../syntaxes/toml.sublime-syntax'))
+      .role('textarea', { rows: [2, 5] })
       .description('📄 TOML 语法高亮文件路径（sublime-syntax 格式）'),
   }).description('🧾 dump 指令设置'),
 
@@ -168,9 +257,11 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('🎨 render-forward 默认样式 (可被 --index/-i 覆盖)'),
     renderForwardSourceFontPath: Schema.string()
       .default('/home/bawuyinguo/Fonts/SourceHanSerifSC/SourceHanSerifSC-Medium.otf')
+      .role('textarea', { rows: [2, 5] })
       .description('🔤 render-forward Source 风格字体绝对路径'),
     renderForwardLxgwFontPath: Schema.string()
       .default('/home/bawuyinguo/Fonts/LXGWWenKai/LXGWWenKaiMono-Medium.ttf')
+      .role('textarea', { rows: [2, 5] })
       .description('🔤 render-forward LXGW 风格字体绝对路径'),
     renderForwardMaxImageSize: Schema.number()
       .default(50)
