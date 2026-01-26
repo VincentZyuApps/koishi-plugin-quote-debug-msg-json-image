@@ -563,9 +563,33 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
           ? await session.bot.internal._request('get_msg', { message_id: session.quote.messageId })
           : await session.bot.getMessage(session.channelId, session.quote.messageId)
 
+        // 调试日志：输出消息对象
+        if (cfg.verboseConsoleLog) {
+          ctx.logger.info(`[render-forward] 获取到的消息对象: ${JSON.stringify(msgObj, null, 2)}`)
+        }
+
         // 检查是否为合并转发消息
         if (!isForwardMessage(msgObj)) {
-          const hint = '该消息不是合并转发消息，无法渲染。\n提示：合并转发消息的 message 数组中应有且仅有一个 type 为 "forward" 的元素。'
+          const message = msgObj?.data?.message || msgObj?.message
+          let debugInfo = ''
+          
+          if (cfg.verboseConsoleLog) {
+            const debugText = `\n\n调试信息：\n` +
+              `- message 是否为数组: ${Array.isArray(message)}\n` +
+              `- message 长度: ${Array.isArray(message) ? message.length : 'N/A'}\n` +
+              `- message 内容: ${JSON.stringify(message, null, 2)}`
+            ctx.logger.warn(`[render-forward] 消息不是合并转发${debugText}`)
+            
+            // 仅在 verboseSessionLog 开启时才在用户消息中包含调试信息
+            if (cfg.verboseSessionLog) {
+              debugInfo = debugText
+            }
+          }
+          
+          const hint = '该消息不是合并转发消息，无法渲染。\n' +
+            '提示：合并转发消息的 message 数组中应有且仅有一个 type 为 "forward" 的元素。\n' +
+            '⚠️ 注意：Bot 自己发送的合并转发消息，可能因为协议限制无法再次获取完整内容。请尝试回复其他人发送的合并转发消息。' +
+            debugInfo
           await session.send(cfg.enableQuote ? [h.quote(session.messageId), hint] : hint)
           return
         }
@@ -573,7 +597,16 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
         // 获取转发内容
         const forwardContent = getForwardContent(msgObj)
         if (!forwardContent || forwardContent.length === 0) {
-          const hint = '无法获取合并转发消息的内容，可能是消息格式不支持。'
+          if (cfg.verboseConsoleLog) {
+            const message = msgObj?.data?.message || msgObj?.message
+            const forwardData = message?.[0]?.data
+            ctx.logger.warn(`[render-forward] 无法获取合并转发内容，forward.data = ${JSON.stringify(forwardData, null, 2)}`)
+          }
+          const hint = '无法获取合并转发消息的内容，可能是消息格式不支持。\n' +
+            '⚠️ 可能原因：\n' +
+            '1. Bot 自己发送的合并转发消息无法再次获取完整内容（OneBot 协议限制）\n' +
+            '2. 合并转发消息的 content 字段为空或格式异常\n' +
+            '建议：尝试回复其他人或其他 Bot 发送的合并转发消息。'
           await session.send(cfg.enableQuote ? [h.quote(session.messageId), hint] : hint)
           return
         }

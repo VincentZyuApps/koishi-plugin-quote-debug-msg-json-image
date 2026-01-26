@@ -133,6 +133,7 @@ export interface Config {
   renderForwardMaxImageSize: number
   // 🛠️ 调试选项
   verboseConsoleLog: boolean
+  verboseSessionLog: boolean
 }
 
 export const Config: Schema<Config> = Schema.intersect([
@@ -273,6 +274,9 @@ export const Config: Schema<Config> = Schema.intersect([
     verboseConsoleLog: Schema.boolean()
       .default(false)
       .description('🐛 启用详细调试日志（显示 Typst 编译过程、语法文件加载等信息）'),
+    verboseSessionLog: Schema.boolean()
+      .default(false)
+      .description('💬 在发送到聊天平台的消息中包含调试信息（仅当 verboseConsoleLog 开启时生效）'),
   }).description('🛠️ 调试选项'),
 
 ])
@@ -312,6 +316,67 @@ function resolveMessageMode(cfg: Config, raw: string | undefined, platform: stri
     : (cfg.dumpMessageMode === 'image' ? 'image' : 'forward')
   if (mode === 'forward' && platform !== 'onebot') return 'image'
   return mode
+}
+
+/**
+ * 递归处理消息对象，将合并转发消息只保留第一条
+ * @param msgObj 消息对象
+ * @param depth 当前递归深度
+ * @returns 是否进行了裁剪
+ */
+function trimForwardMessages(msgObj: any, depth: number = 0): boolean {
+  let trimmed = false
+  
+  // 处理 msgObj.data.message 或 msgObj.message
+  const messageArray = msgObj?.data?.message || msgObj?.message
+  
+  if (!Array.isArray(messageArray)) return false
+  
+  for (let i = 0; i < messageArray.length; i++) {
+    const element = messageArray[i]
+    
+    // 如果是 forward 类型
+    if (element?.type === 'forward' && element?.data?.content) {
+      const content = element.data.content
+      
+      if (Array.isArray(content) && content.length > 1) {
+        // 计算被省略的消息数
+        const omittedCount = content.length - 1
+        
+        // 计算被省略的字符数（粗略估算）
+        let omittedChars = 0
+        try {
+          const omittedContent = content.slice(1)
+          omittedChars = JSON.stringify(omittedContent).length
+        } catch (e) {
+          omittedChars = 0
+        }
+        
+        // 只保留第一条，并添加占位符
+        const placeholder = {
+          "......": `已省略 ${omittedCount} 条消息（约 ${omittedChars} 字符）`,
+          "_omitted_count": omittedCount,
+          "_omitted_chars": omittedChars,
+          "_note": "为避免消息过长导致渲染卡顿，合并转发消息已被自动裁剪"
+        }
+        
+        element.data.content = [content[0], placeholder]
+        trimmed = true
+        
+        // 递归处理第一条消息
+        if (content[0]) {
+          const nestedTrimmed = trimForwardMessages(content[0], depth + 1)
+          if (nestedTrimmed) trimmed = true
+        }
+      } else if (Array.isArray(content) && content.length === 1) {
+        // 只有一条，但也需要递归检查
+        const nestedTrimmed = trimForwardMessages(content[0], depth + 1)
+        if (nestedTrimmed) trimmed = true
+      }
+    }
+  }
+  
+  return trimmed
 }
 
 async function renderTypstImageSafe(
@@ -410,6 +475,12 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
           const msgObj = session.platform === 'onebot' && cfg.useNapcatGetMsgInsteadOnOnebot
             ? await session.bot.internal._request('get_msg', { message_id: targetMessageId })
             : await session.bot.getMessage(session.channelId, targetMessageId)
+
+          // 检测并裁剪合并转发消息
+          const wasTrimmed = trimForwardMessages(msgObj)
+          if (wasTrimmed) {
+            ctx.logger.warn(`[${cmd.name}] 检测到尝试dump合并转发，已自动裁剪，只保留第一条消息（递归处理）`)
+          }
 
           const formattedData = formatData(msgObj, cmd.format)
           ctx.logger.info(`[${cmd.name}] quote.message = ${formattedData}`)
