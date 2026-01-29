@@ -119,6 +119,23 @@ class TypstRenderer {
     if (!this.ctx.toImageService) {
       throw new Error('to-image-service 服务未启用，无法使用 Typst 渲染')
     }
+    // 等待 toImageService.svgToImage.resvg 就绪（最多等待 10 秒）
+    const maxWaitMs = 10000
+    const intervalMs = 200
+    let waited = 0
+    while (!this.ctx.toImageService?.svgToImage?.resvg && waited < maxWaitMs) {
+      if (this.cfg.verboseConsoleLog) {
+        this.logger.info(`[Typst] 等待 toImageService.svgToImage.resvg 就绪... (${waited}ms)`)
+      }
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      waited += intervalMs
+    }
+    if (!this.ctx.toImageService?.svgToImage?.resvg) {
+      throw new Error(
+        `to-image-service 的 svgToImage.resvg 在 ${maxWaitMs}ms 内未就绪。` +
+        '请确保 to-image-service 插件在 quote-debug-msg-json-image 之前加载，并且已正确安装 @resvg/resvg-wasm 依赖。'
+      )
+    }
     if (this.cfg.verboseConsoleLog) {
       this.logger.info(`[Typst] 开始加载 Typst 模块: ${this.typstModuleName}`)
       this.logger.info(`[Typst] 工作目录: ${this.workspaceDir}`)
@@ -271,6 +288,15 @@ class TypstRenderer {
       this.logger.info(`[Typst] 开始转换 PNG，缩放: ${scale}x`)
     }
     const svg = this.toSvg(content)
+    
+    // 防御性检查：确保 toImageService.svgToImage 已初始化
+    if (!this.ctx.toImageService?.svgToImage?.resvg) {
+      throw new Error(
+        'toImageService.svgToImage.resvg 尚未就绪，请确保 to-image-service 插件已完全启动。' +
+        '提示：在 koishi.yml 中将 to-image-service 放在 quote-debug-msg-json-image 之前加载。'
+      )
+    }
+    
     const result = await this.ctx.toImageService.svgToImage.resvg(svg, {
       options: {
         fitTo: { mode: 'zoom', value: scale },
