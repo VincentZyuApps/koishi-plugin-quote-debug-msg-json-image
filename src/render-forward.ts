@@ -4,6 +4,9 @@ import path from 'path'
 import { } from 'koishi-plugin-puppeteer'
 import type { Config } from './index'
 
+/** QQ用户ID到头像base64的映射 */
+type AvatarMap = Map<number, string>
+
 /**
  * 合并转发消息的内容项类型
  */
@@ -61,11 +64,13 @@ function getForwardContent(msgObj: any): ForwardContentItem[] | null {
  * @param element 消息元素
  * @param currentDepth 当前嵌套深度
  * @param maxDepth 最大嵌套深度
+ * @param avatarMap 头像映射表（可选）
  */
 function parseMessageElement(
   element: { type: string; data: Record<string, any> },
   currentDepth: number,
-  maxDepth: number
+  maxDepth: number,
+  avatarMap: AvatarMap | null = null
 ): string {
   switch (element.type) {
     case 'text':
@@ -91,7 +96,7 @@ function parseMessageElement(
       // 递归渲染嵌套的合并转发
       const nestedContent = element.data.content as ForwardContentItem[] | undefined
       if (nestedContent && nestedContent.length > 0) {
-        return generateNestedForwardHtml(nestedContent, currentDepth + 1, maxDepth)
+        return generateNestedForwardHtml(nestedContent, currentDepth + 1, maxDepth, avatarMap)
       }
       return `<span class="msg-forward">[合并转发]</span>`
     default:
@@ -127,21 +132,81 @@ function formatTimestamp(timestamp: number): string {
 }
 
 /**
+ * 获取头像URL（优先使用预获取的base64，否则使用原始URL）
+ */
+function getAvatarUrl(userId: number, avatarMap: AvatarMap | null): string {
+  if (avatarMap && avatarMap.has(userId)) {
+    return avatarMap.get(userId)!
+  }
+  return `https://q1.qlogo.cn/g?b=qq&nk=${userId}&s=640`
+}
+
+/**
+ * 递归收集所有用户ID（用于去重预获取头像）
+ */
+function collectAllUserIds(content: ForwardContentItem[], maxDepth: number, currentDepth: number = 1): Set<number> {
+  const userIds = new Set<number>()
+  
+  for (const item of content) {
+    // 收集当前消息发送者的ID
+    if (item.sender?.user_id) {
+      userIds.add(item.sender.user_id)
+    }
+    
+    // 递归处理嵌套的合并转发消息
+    if (currentDepth < maxDepth) {
+      for (const el of item.message) {
+        if (el.type === 'forward' && el.data?.content) {
+          const nestedIds = collectAllUserIds(el.data.content, maxDepth, currentDepth + 1)
+          nestedIds.forEach(id => userIds.add(id))
+        }
+      }
+    }
+  }
+  
+  return userIds
+}
+
+/**
+ * 预获取所有头像并转为base64（带去重）
+ */
+async function prefetchAvatars(ctx: Context, userIds: Set<number>): Promise<AvatarMap> {
+  const avatarMap: AvatarMap = new Map()
+  
+  const fetchPromises = Array.from(userIds).map(async (userId) => {
+    const url = `https://q1.qlogo.cn/g?b=qq&nk=${userId}&s=640`
+    try {
+      const response = await ctx.http.get(url, { responseType: 'arraybuffer' })
+      const buffer = Buffer.from(response)
+      const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
+      avatarMap.set(userId, base64)
+    } catch (err) {
+      ctx.logger.warn(`[render-forward] 预获取头像失败 (userId=${userId}): ${err}`)
+      // 失败时不添加到map，后续会使用原始URL
+    }
+  })
+  
+  await Promise.all(fetchPromises)
+  return avatarMap
+}
+
+/**
  * 生成嵌套转发的HTML
  */
 function generateNestedForwardHtml(
   content: ForwardContentItem[],
   currentDepth: number,
-  maxDepth: number
+  maxDepth: number,
+  avatarMap: AvatarMap | null
 ): string {
   const nestedMessagesHtml = content.map((item, index) => {
     const senderName = item.sender.card || item.sender.nickname || String(item.sender.user_id)
     const timeStr = formatTimestamp(item.time)
-    const avatarUrl = `https://q1.qlogo.cn/g?b=qq&nk=${item.sender.user_id}&s=640`
+    const avatarUrl = getAvatarUrl(item.sender.user_id, avatarMap)
     
     // 解析消息内容（传递深度参数）
     const contentHtml = item.message
-      .map(el => parseMessageElement(el, currentDepth, maxDepth))
+      .map(el => parseMessageElement(el, currentDepth, maxDepth, avatarMap))
       .join('')
 
     return `
@@ -180,15 +245,16 @@ function generateNestedForwardHtml(
 function generateMessageItemHtml(
   item: ForwardContentItem,
   index: number,
-  maxDepth: number
+  maxDepth: number,
+  avatarMap: AvatarMap | null
 ): string {
   const senderName = item.sender.card || item.sender.nickname || String(item.sender.user_id)
   const timeStr = formatTimestamp(item.time)
-  const avatarUrl = `https://q1.qlogo.cn/g?b=qq&nk=${item.sender.user_id}&s=640`
+  const avatarUrl = getAvatarUrl(item.sender.user_id, avatarMap)
   
   // 解析消息内容（从深度1开始，因为顶层是深度0）
   const contentHtml = item.message
-    .map(el => parseMessageElement(el, 1, maxDepth))
+    .map(el => parseMessageElement(el, 1, maxDepth, avatarMap))
     .join('')
 
   return `
@@ -227,7 +293,8 @@ function generateForwardHtmlTemplate(
   style: ForwardRenderStyle,
   fontFaceCss: string,
   backgroundImageUrl: string | null,
-  maxImageSize: number
+  maxImageSize: number,
+  avatarMap: AvatarMap | null
 ): string {
   // lxgw 样式使用的颜色配置
   const lxgwColors = {
@@ -244,7 +311,7 @@ function generateForwardHtmlTemplate(
     imageLabel: '#64748b',
   }
 
-  const messagesHtml = content.map((item, index) => generateMessageItemHtml(item, index, maxDepth)).join('')
+  const messagesHtml = content.map((item, index) => generateMessageItemHtml(item, index, maxDepth, avatarMap)).join('')
   const timestamp = new Date().toLocaleString('zh-CN')
 
   // 基础 CSS（通用结构样式）
@@ -632,6 +699,19 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
         const fontFaceCss = await loadFontFaceCss(fontPath, fontFamily)
         const backgroundImageUrl = renderStyle === 'source' ? getForwardAvatarUrl(forwardContent) : null
 
+        // 预获取头像（如果开启了配置）
+        let avatarMap: AvatarMap | null = null
+        if (cfg.renderForwardPrefetchAvatar !== false) {
+          const userIds = collectAllUserIds(forwardContent, maxDepth)
+          if (cfg.verboseConsoleLog) {
+            ctx.logger.info(`[render-forward] 预获取头像，共 ${userIds.size} 个不重复的用户ID: ${Array.from(userIds).join(', ')}`)
+          }
+          avatarMap = await prefetchAvatars(ctx, userIds)
+          if (cfg.verboseConsoleLog) {
+            ctx.logger.info(`[render-forward] 成功预获取 ${avatarMap.size}/${userIds.size} 个头像`)
+          }
+        }
+
         // 检查 puppeteer 服务
         if (!ctx.puppeteer) {
           const hint = 'Puppeteer 服务不可用。请确保已安装 koishi-plugin-puppeteer 插件。'
@@ -654,7 +734,8 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
             renderStyle,
             fontFaceCss,
             backgroundImageUrl,
-            maxImageSize
+            maxImageSize,
+            avatarMap
           )
 
           await page.setViewport({ width: 980, height: 9999 })

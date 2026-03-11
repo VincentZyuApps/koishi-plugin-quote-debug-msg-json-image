@@ -1,6 +1,12 @@
-# koishi-plugin-quote-debug-msg-json-image
+# 📋 koishi-plugin-quote-debug-msg-json-image
 
 [![npm](https://img.shields.io/npm/v/koishi-plugin-quote-debug-msg-json-image?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-quote-debug-msg-json-image)
+[![npm-download](https://img.shields.io/npm/dm/koishi-plugin-quote-debug-msg-json-image?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-quote-debug-msg-json-image)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VincentZyuApps/koishi-plugin-quote-debug-msg-json-image)
+[![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image)
+
+<p>💬 插件使用问题 / 🐛 Bug反馈 / 👨‍💻 插件开发交流，欢迎加入QQ群：<b>1085190201</b> 🎉</p>
+<p>💡 在群里直接艾特我，回复的更快哦~ ✨</p>
 
 回复一条消息，将其渲染为精美的 JSON/YAML/TOML 格式图片（防止超出聊天平台的文字长度上限）。还支持渲染 OneBot 的合并转发消息为图片。
 
@@ -29,7 +35,7 @@ required:
 
 以下是本插件的依赖配置及其用途说明：
 
-```jsonc
+```json
 {
   // === peerDependencies: 宿主环境必须提供的依赖 ===
   // 这些依赖由 Koishi 主程序或其他插件提供，插件不会自己安装
@@ -148,6 +154,10 @@ dump-toml          # 渲染为 TOML 格式图片
 - `-r, --reply <forward|image>` - 回复模式（合并转发/仅图片）
 - `-s, --self` - 解析当前消息而非被引用的消息
 
+**效果预览**：
+
+![dump-json 效果预览](doc/dump-json-preview.png)
+
 ### render-forward 指令
 
 回复一条合并转发消息并发送：
@@ -158,6 +168,12 @@ render-forward     # 渲染合并转发为图片
 
 **可用选项**：
 - `-i, --index <0|1>` - 样式选择（0=Source Han Serif 毛玻璃风格, 1=LXGW WenKai 简约风格）
+
+**效果预览**：
+
+| Source Han Serif 风格 (index=0) | LXGW WenKai 风格 (index=1) |
+|:---:|:---:|
+| ![Source 风格预览](doc/render-forward-source-preview.png) | ![LXGW 风格预览](doc/render-forward-lxgw-preview.png) |
 
 ---
 
@@ -316,6 +332,23 @@ function parseMessageElement(
 ---
 
 ## ⚙️ 配置项
+
+### 🔤 字体配置
+
+本插件需要配置字体路径才能正常渲染。你可以：
+
+1. **下载预置字体**：前往 [Gitee Releases - fonts](https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image/releases/tag/fonts) 下载字体文件
+2. **使用自己喜欢的字体**：支持 `.ttf` 和 `.otf` 格式
+
+下载后将字体文件放到服务器上，然后在配置中填入**绝对路径**即可。
+
+**需要配置的字体路径（共 3 个）**：
+
+| 配置项 | 用途 | 推荐字体 |
+|--------|------|----------|
+| `dumpTypstFontPath` | dump 指令 (Typst 渲染) | LXGW WenKai Mono |
+| `renderForwardSourceFontPath` | render-forward Source 风格 | Source Han Serif SC |
+| `renderForwardLxgwFontPath` | render-forward LXGW 风格 | LXGW WenKai Mono |
 
 ### dump 指令配置
 

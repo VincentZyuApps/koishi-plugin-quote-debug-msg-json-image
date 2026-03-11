@@ -28,7 +28,10 @@ export const usage = `
 
 <p>回复一条消息，将其渲染为精美的 JSON/YAML/TOML 格式图片。还支持渲染 OneBot 的合并转发消息为图片。</p>
 
-<p>插件使用问题 / Bug反馈 / 插件开发交流，欢迎加入QQ群：<b>259248174</b></p>
+<p><del>💬 插件使用问题 / 🐛 Bug反馈 / 👨‍💻 插件开发交流，欢迎加入QQ群：<b>259248174</b>   🎉（这个群G了</del> </p> 
+<p>💬 插件使用问题 / 🐛 Bug反馈 / 👨‍💻 插件开发交流，欢迎加入QQ群：<b>1085190201</b> 🎉</p>
+<p>💡 在群里直接艾特我，回复的更快哦~ ✨</p>
+
 
 <p><b>💡 提示：</b> <a href="https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image" target="_blank">前往 Gitee README 获得更佳观感 → <i>https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image</i></a></p>
 
@@ -131,6 +134,7 @@ export interface Config {
   renderForwardSourceFontPath: string
   renderForwardLxgwFontPath: string
   renderForwardMaxImageSize: number
+  renderForwardPrefetchAvatar: boolean
   // 🛠️ 调试选项
   verboseConsoleLog: boolean
   verboseSessionLog: boolean
@@ -149,7 +153,7 @@ export const Config: Schema<Config> = Schema.intersect([
 
   Schema.object({
     maxJsonTextLength: Schema.number()
-      .default(2233)
+      .default(2222)
       .min(50).max(10000).step(1)
       .description('📏 JSON/YAML/TOML 文本最大显示长度，超过将截断'),
     dumpJsonCommandName: Schema.string()
@@ -228,15 +232,15 @@ export const Config: Schema<Config> = Schema.intersect([
       .default('#8788a5')
       .description('📊 Typst 统计信息文字颜色'),
     dumpJsonSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/json.sublime-syntax'))
+      .default(path.resolve(__dirname, '../syntaxes/json.sublime-syntax.yml'))
       .role('textarea', { rows: [2, 5] })
       .description('📄 JSON 语法高亮文件路径（sublime-syntax 格式）'),
     dumpYamlSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/yaml.sublime-syntax'))
+      .default(path.resolve(__dirname, '../syntaxes/yaml.sublime-syntax.yml'))
       .role('textarea', { rows: [2, 5] })
       .description('📄 YAML 语法高亮文件路径（sublime-syntax 格式）'),
     dumpTomlSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/toml.sublime-syntax'))
+      .default(path.resolve(__dirname, '../syntaxes/toml.sublime-syntax.yml'))
       .role('textarea', { rows: [2, 5] })
       .description('📄 TOML 语法高亮文件路径（sublime-syntax 格式）'),
   }).description('🧾 dump 指令设置'),
@@ -267,7 +271,10 @@ export const Config: Schema<Config> = Schema.intersect([
     renderForwardMaxImageSize: Schema.number()
       .default(50)
       .min(10).max(1000).step(1)
-      .description('🖼️ render-forward 图片长边最大长度 (px)')
+      .description('🖼️ render-forward 图片长边最大长度 (px)'),
+    renderForwardPrefetchAvatar: Schema.boolean()
+      .default(true)
+      .description('🖼️ 预获取QQ头像并转为base64（解决puppeteer无法加载QQ头像的问题）')
   }).description('📨 render-forward 指令设置'),
 
   Schema.object({

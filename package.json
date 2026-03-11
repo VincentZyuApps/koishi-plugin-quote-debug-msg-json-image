@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-quote-debug-msg-json-image",
   "description": "把一条消息用json/yaml/toml的格式渲染成图片，支持typst或者markdown。还支持用puppeteer渲染onebot的合并转发成图片",
-  "version": "0.2.0-beta.5+20260127",
+  "version": "0.2.0-beta.8+20260312",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
