@@ -1,8 +1,9 @@
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { Context, h } from 'koishi'
-import { readFile } from 'fs/promises'
-import path from 'path'
 import { } from 'koishi-plugin-puppeteer'
-import type { Config } from './index'
+import type { Config } from './config'
+import { resolveConfiguredFontPath } from './font-utils'
 
 /** QQ用户ID到头像base64的映射 */
 type AvatarMap = Map<number, string>
@@ -694,8 +695,8 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
 
         const fontFamily = 'RenderForwardFont'
         const fontPath = renderStyle === 'source'
-          ? cfg.renderForwardSourceFontPath
-          : cfg.renderForwardLxgwFontPath
+          ? resolveConfiguredFontPath(ctx, cfg.renderForwardSourceFontPath, 'SOURCE_HAN')
+          : resolveConfiguredFontPath(ctx, cfg.renderForwardLxgwFontPath, 'LXGW')
         const fontFaceCss = await loadFontFaceCss(fontPath, fontFamily)
         const backgroundImageUrl = renderStyle === 'source' ? getForwardAvatarUrl(forwardContent) : null
 
