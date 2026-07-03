@@ -52,9 +52,18 @@ export function createUsage(version: string): string {
 
 <h3>dump 指令</h3>
 <p>回复一条消息并发送：</p>
-<pre><code>dump-json
+<pre>
+<code>
+dump-json
+</code>
+<code>
 dump-yaml
-dump-toml</code></pre>
+</code>
+<code>
+dump-toml
+</code>
+</code>
+</pre>
 
 <p><b>可用选项：</b></p>
 <ul>
