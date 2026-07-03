@@ -3,8 +3,6 @@ import fs from 'node:fs'
 import { Context, h } from 'koishi'
 import yaml from 'js-yaml'
 import TOML from '@iarna/toml'
-import { } from 'koishi-plugin-markdown-to-image-service'
-import { } from 'koishi-plugin-puppeteer'
 import type { Config } from './config'
 import { Config as ConfigSchema } from './config'
 import { createUsage } from './usage'
@@ -22,12 +20,14 @@ const pkg = JSON.parse(
 export const name = 'quote-debug-msg-json-image'
 
 export const inject = {
-  required: ['markdownToImage', 'puppeteer'],
+  optional: ['markdownToImage', 'puppeteer'],
 }
 
 export const usage = createUsage(pkg.version)
 
 export { ConfigSchema as Config }
+
+const FORWARD_MESSAGE_MODE_PLATFORMS = new Set(['onebot', 'red', 'discord'])
 
 function formatData(data: any, format: FormatType): string {
   switch (format) {
@@ -62,7 +62,7 @@ function resolveMessageMode(cfg: Config, raw: string | undefined, platform: stri
   const mode = normalized === 'forward' || normalized === 'image'
     ? normalized
     : (cfg.dumpMessageMode === 'image' ? 'image' : 'forward')
-  if (mode === 'forward' && platform !== 'onebot') return 'image'
+  if (mode === 'forward' && !FORWARD_MESSAGE_MODE_PLATFORMS.has((platform || '').toLowerCase())) return 'image'
   return mode
 }
 
@@ -203,7 +203,7 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
   for (const cmd of dumpCommands) {
     ctx.command(cmd.name, cmd.desc)
       .option('replyMode', '-r, --reply-mode <mode:string> 回复渲染模式 (typ/typst 或 md/markdown)')
-      .option('messageMode', '-m, --message-mode <mode:string> 回复消息模式 (forward 或 image，非 onebot 会自动回退为 image)')
+      .option('messageMode', '-m, --message-mode <mode:string> 回复消息模式 (forward 或 image；forward 仅 onebot/red/discord 可用)')
       .option('self', '-s, --self 解析当前消息本身而不是引用的消息')
       .action(async ({ session, options }) => {
         try {
@@ -260,5 +260,7 @@ export async function apply(ctx: Context, cfg: Config) {
   })
   registerQQQuoteCacheMiddleware(ctx)
   registerAllDumpCommands(ctx, cfg)
-  registerRenderForwardCommand(ctx, cfg)
+  ctx.inject(['puppeteer'], (ctx) => {
+    registerRenderForwardCommand(ctx, cfg)
+  })
 }

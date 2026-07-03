@@ -33,7 +33,7 @@ function normalizeSyntaxFilename(value: string | undefined, fallback: SyntaxFile
 }
 
 function getBundledSyntaxDir(): string {
-  return path.resolve(__dirname, '../syntaxes')
+  return path.resolve(__dirname, '../../syntaxes')
 }
 
 function getBundledSyntaxPath(fileName: SyntaxFileName): string {

@@ -92,12 +92,12 @@ export const Config: Schema<Config> = Schema.intersect([
       .role('textarea', { rows: [2, 5] })
       .description('🧩 Typst 图片底部署名文本，支持 Typst 基本文本标记'),
     dumpMessageMode: Schema.union([
-      Schema.const('forward').description('📦 合并转发模式'),
-      Schema.const('image').description('🖼️ 仅发送图片'),
+      Schema.const('forward').description('📦 合并转发模式（仅 onebot / red / discord 平台可用）'),
+      Schema.const('image').description('🖼️ 仅发送图片（默认，跨平台稳定）'),
     ])
       .role('radio')
-      .default('forward')
-      .description('💬 dump 指令回复模式（作为 option 的默认值）'),
+      .default('image')
+      .description('💬 dump 指令回复模式（作为 option 的默认值；不支持 forward 的平台会自动回退为 image）'),
     dumpTypstRenderScale: Schema.number()
       .default(2.33)
       .min(1).max(100).step(0.01)

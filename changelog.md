@@ -1,5 +1,93 @@
 # 📜 Changelog
 
+## 🧩 v0.4.4-beta.8+20260703
+
+### 🔄 Changed
+
+- 📦 版本号从 `0.4.3-beta.7+20260703` 更新到 `0.4.4-beta.8+20260703`。
+- 🧩 将 `markdownToImage` 和 `puppeteer` 从 required 服务改为 optional 服务。
+- 🖼️ 将 `dumpMessageMode` 默认值从 `forward` 改为 `image`，提升跨平台默认可用性。
+- 📦 dump 的 `forward` 回复模式仅允许在 `onebot` / `red` / `discord` 平台使用，其他平台自动回退为 `image`。
+- 📦 将 `koishi-plugin-markdown-to-image-service` 和 `koishi-plugin-puppeteer` 从 `dependencies` 移到 optional peer dependencies。
+- 🧾 在 `package.json` 中新增 `peerDependenciesMeta`，明确两个服务插件都是可选依赖。
+- 🛠️ 将两个可选服务插件保留在 `devDependencies`，用于源码开发和类型声明合并。
+- 🍵 在 `package.json` 中新增 `koishi.service.optional`，声明可选服务：
+  - `markdownToImage`
+  - `puppeteer`
+
+### 🐛 Fixed
+
+- 🧯 移除可选服务插件的运行时空 import，避免未安装可选插件时加载主插件失败。
+- 📝 Markdown 渲染模式会在缺少 `markdownToImage` 服务时给出明确提示。
+- 📨 `render-forward` 改为通过 `ctx.inject(['puppeteer'], ...)` 注册，跟随 `puppeteer` 服务生命周期自动注册和回收。
+
+### 📝 Documentation
+
+- 📖 README 将依赖说明改为“核心运行时依赖 + 可选功能依赖”。
+- 🧭 README 和 usage 明确 Typst dump 不依赖 `markdownToImage` 或 `puppeteer`。
+- 🌈 README 补充 npm 包内 `syntaxes` 路径、源码开发路径和默认复制行为。
+- 📋 README 的 `dumpSyntaxAssetFolderRelativePath` 默认值改为数组形式。
+- 🔤 usage 补充代码语法高亮功能点和 `LICENSE` 文件说明。
+
+## 🧱 v0.4.3-beta.7+20260703
+
+### 🔄 Changed
+
+- 📦 版本号从 `0.4.1-beta.5+20260703` 更新到 `0.4.3-beta.7+20260703`。
+- 🗂️ 整理 `src` 目录结构，将不同职责的源码移动到更清晰的子目录：
+  - 📋 `dump-markdown.ts` → `dump/markdown.ts`
+  - 🎨 `dump-typst.ts` → `dump/typst.ts`
+  - 📨 `render-forward.ts` → `render/forward.ts`
+  - 🔤 `font-utils.ts` → `utils/font.ts`
+  - 🌈 `syntax-utils.ts` → `utils/syntax.ts`
+  - 🤖 `qq-quote.ts` → `qq.ts`
+- 🧩 保留 `index.ts` / `config.ts` / `usage.ts` 在根目录作为插件入口、配置和说明文件。
+- 🔗 同步调整所有 `import` 路径，保持插件运行行为不变。
+
+### ➕ Added
+
+- 🌈 新增 `utils/syntax.ts`，集中处理 Typst 语法高亮资源路径、复制和工作目录解析。
+- 📁 新增 `dumpSyntaxAssetFolderRelativePath` 配置项，用 `string[]` 表示相对于 Koishi 根目录 `ctx.baseDir` 的语法高亮资源目录。
+- 📄 新增三个语法文件名配置项：
+  - `dumpJsonSyntaxFilename`
+  - `dumpYamlSyntaxFilename`
+  - `dumpTomlSyntaxFilename`
+- 🧭 插件启动时会把包内 `syntaxes` 目录中的 JSON/YAML/TOML 高亮文件复制到：
+
+```text
+ctx.baseDir/data/assets/quote-debug-msg-json-image/syntaxes
+```
+
+- 🧠 Typst 编译器 workspace 改为使用：
+
+```text
+ctx.baseDir/data/assets/quote-debug-msg-json-image
+```
+
+### 📝 Documentation
+
+- 🗺️ README 的渲染流程新增 Mermaid 图，分别展示 dump 出图链路和 `render-forward` 截图链路。
+- 🌈 README 补充语法高亮资源零占用说明。
+- 🧾 usage 页面同步补充 `dumpSyntaxAssetFolderRelativePath` 与三个 `Filename` 配置项说明。
+
+### 🧹 Removed
+
+- 🧼 语法高亮资源运行时目录去掉 `koishi-plugin-` 前缀，默认目录从完整包名前缀风格调整为短插件名：
+
+```text
+data/assets/quote-debug-msg-json-image/syntaxes
+```
+
+- 🧹 不再把 JSON/YAML/TOML 语法配置项展示为长绝对路径，配置页只显示目录片段和文件名。
+
+## 🧰 v0.4.1-beta.5+20260703
+
+### 🔧 Chore
+
+- 📦 版本号从 `0.4.0-beta.4+20260703` 更新到 `0.4.1-beta.5+20260703`。
+- 🧱 将 `@myriaddreamin/typst-ts-node-compiler` 依赖从 `^0.7.0-rc2` 调整为 `^0.7.0`。
+- 🧪 继续保留 `@resvg/resvg-js` 作为 Typst SVG 转 PNG 的本地渲染实现。
+
 ## 🚀 v0.4.0-beta.4+20260703
 
 ### 📝 Documentation

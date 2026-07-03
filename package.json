@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-quote-debug-msg-json-image",
   "description": "📋把一条消息用json/yaml/toml的格式渲染成图片，🎨支持typst或者markdown。还支持用puppeteer渲染onebot的合并转发成图片🖼️",
-  "version": "0.4.3-beta.7+20260703",
+  "version": "0.4.5-beta.9+20260703",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -16,17 +16,39 @@
     "plugin"
   ],
   "peerDependencies": {
-    "koishi": "^4.18.7"
+    "koishi": "^4.18.7",
+    "koishi-plugin-markdown-to-image-service": "^1.3.6",
+    "koishi-plugin-puppeteer": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "koishi-plugin-markdown-to-image-service": {
+      "optional": true
+    },
+    "koishi-plugin-puppeteer": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
     "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
     "@resvg/resvg-js": "^2.6.2",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.1.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "koishi-plugin-markdown-to-image-service": "^1.3.6",
     "koishi-plugin-puppeteer": "^3.0.0"
   },
-  "devDependencies": {
-    "@types/js-yaml": "^4.0.9"
+  "koishi": {
+    "description": {
+      "zh": "将消息对象渲染为 JSON/YAML/TOML 图片，支持 Typst、Markdown 和 OneBot 合并转发截图",
+      "en": "Render quoted messages as JSON/YAML/TOML images with Typst, Markdown, and OneBot forward screenshots."
+    },
+    "service": {
+      "optional": [
+        "markdownToImage",
+        "puppeteer"
+      ]
+    }
   }
 }

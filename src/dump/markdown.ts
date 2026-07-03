@@ -1,5 +1,5 @@
 import { Context } from 'koishi'
-import { } from 'koishi-plugin-markdown-to-image-service'
+import type {} from 'koishi-plugin-markdown-to-image-service'
 
 export type FormatType = 'json' | 'yaml' | 'toml'
 
@@ -39,5 +39,10 @@ ${formattedData}
 > **Mode:** ${messageMode} · markdown image  
 > **Time:** ${timestamp}`
 
-  return ctx.markdownToImage.convertToImage(markdown)
+  const markdownToImage = ctx.markdownToImage
+  if (!markdownToImage?.convertToImage) {
+    throw new Error('Markdown 渲染服务不可用。请启用 koishi-plugin-markdown-to-image-service，或改用 Typst 渲染模式。')
+  }
+
+  return markdownToImage.convertToImage(markdown)
 }

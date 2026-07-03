@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { Context, h } from 'koishi'
-import { } from 'koishi-plugin-puppeteer'
+import type {} from 'koishi-plugin-puppeteer'
 import type { Config } from '../config'
 import { resolveConfiguredFontPath } from '../utils/font'
 
@@ -711,13 +711,6 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
           if (cfg.verboseConsoleLog) {
             ctx.logger.info(`[render-forward] 成功预获取 ${avatarMap.size}/${userIds.size} 个头像`)
           }
-        }
-
-        // 检查 puppeteer 服务
-        if (!ctx.puppeteer) {
-          const hint = 'Puppeteer 服务不可用。请确保已安装 koishi-plugin-puppeteer 插件。'
-          await session.send(cfg.enableQuote ? [h.quote(session.messageId), hint] : hint)
-          return
         }
 
         // 发送提示消息
