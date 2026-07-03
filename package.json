@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-quote-debug-msg-json-image",
   "description": "📋把一条消息用json/yaml/toml的格式渲染成图片，🎨支持typst或者markdown。还支持用puppeteer渲染onebot的合并转发成图片🖼️",
-  "version": "0.4.0-beta.3+20260703",
+  "version": "0.4.0-beta.4+20260703",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@iarna/toml": "^2.2.5",
-    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0-rc2",
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0",
     "@resvg/resvg-js": "^2.6.2",
     "js-yaml": "^4.1.1",
     "koishi-plugin-markdown-to-image-service": "^1.3.6",
