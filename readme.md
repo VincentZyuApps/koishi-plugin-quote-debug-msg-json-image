@@ -72,12 +72,33 @@ dump-json / dump-yaml / dump-toml
        markdown-to-image-service -> 图片
 ```
 
+```mermaid
+flowchart TD
+  A["dump-json / dump-yaml / dump-toml"] --> B["获取被引用消息 / 当前消息"]
+  B --> C["JSON / YAML / TOML 序列化"]
+  C --> D{"渲染模式"}
+  D -->|"Typst"| E["typst-ts-node-compiler"]
+  E --> F["SVG"]
+  F --> G["@resvg/resvg-js"]
+  G --> H["PNG 图片"]
+  D -->|"Markdown"| I["markdown-to-image-service"]
+  I --> H
+```
+
 ```text
 render-forward
   -> 获取 OneBot 合并转发消息
   -> HTML 模板
   -> Puppeteer 截图
   -> PNG
+```
+
+```mermaid
+flowchart TD
+  A["render-forward"] --> B["获取 OneBot 合并转发消息"]
+  B --> C["HTML 模板"]
+  C --> D["Puppeteer 截图"]
+  D --> E["PNG 图片"]
 ```
 
 ## 🚀 使用方法
@@ -177,6 +198,16 @@ Release 下载配置：
 
 ## 🔧 技术实现细节
 
+### 语法高亮资源
+
+npm 包内仍会发布 `syntaxes` 目录作为内置种子文件。插件启动时会把这三个 `sublime-syntax` 文件复制到 Koishi 运行目录：
+
+```text
+ctx.baseDir/data/assets/quote-debug-msg-json-image/syntaxes
+```
+
+Typst 编译器的 workspace 会指向 `ctx.baseDir/data/assets/quote-debug-msg-json-image`，符合 Koishi 运行时文件不写入插件包目录的零占用习惯。
+
 ### Typst 渲染
 
 Typst 内置多种编程语言的语法高亮。本插件使用 Fenced Code Block 语法触发高亮：
@@ -231,6 +262,10 @@ Markdown 渲染使用 `koishi-plugin-markdown-to-image-service`，通过标准 M
 | `dumpTypstRenderScale` | `number` | `2.33` | Typst 渲染缩放倍率 |
 | `dumpTypstPageBgColor` | `string` | `#f9efe2` | Typst 页面背景色 |
 | `dumpTypstCodeBlockFillColor` | `string` | `#ffffff` | Typst 代码块背景色 |
+| `dumpSyntaxAssetFolderRelativePath` | `string[]` | `data/assets/quote-debug-msg-json-image/syntaxes` | 相对于 Koishi 根目录 `ctx.baseDir` 的语法高亮文件夹路径 |
+| `dumpJsonSyntaxFilename` | `string` | `json.sublime-syntax.yml` | JSON 语法高亮文件名 |
+| `dumpYamlSyntaxFilename` | `string` | `yaml.sublime-syntax.yml` | YAML 语法高亮文件名 |
+| `dumpTomlSyntaxFilename` | `string` | `toml.sublime-syntax.yml` | TOML 语法高亮文件名 |
 
 ### render-forward
 

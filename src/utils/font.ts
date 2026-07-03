@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFile, writeFile, mkdir, rm, rename } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import type { Context } from 'koishi'
-import type { Config } from './config'
+import type { Config } from '../config'
 
 export const FONT_FILES = {
   LXGW: 'LXGWWenKaiMono-Medium.ttf',

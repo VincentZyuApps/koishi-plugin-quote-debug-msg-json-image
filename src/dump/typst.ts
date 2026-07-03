@@ -3,8 +3,9 @@ import fs from 'node:fs'
 import { Context } from 'koishi'
 import { Resvg } from '@resvg/resvg-js'
 import type { NodeCompiler, NodeAddFontBlobs } from '@myriaddreamin/typst-ts-node-compiler'
-import type { Config } from './config'
-import { getTypstFontPaths } from './font-utils'
+import type { Config } from '../config'
+import { getTypstFontPaths } from '../utils/font'
+import { getSyntaxWorkspaceByBaseDir } from '../utils/syntax'
 
 export type FormatType = 'json' | 'yaml' | 'toml'
 
@@ -84,14 +85,16 @@ class TypstRenderer {
   private typst: typeof import('@myriaddreamin/typst-ts-node-compiler') | null = null
   private compiler: NodeCompiler | null = null
   private readonly typstModuleName = '@myriaddreamin/typst-ts-node-compiler'
-  private readonly workspaceDir = path.resolve(__dirname, '..')
+  private readonly workspaceDir: string
   private initialized = false
 
   constructor(
     private ctx: Context,
     private logger: any,
     private cfg: Config,
-  ) {}
+  ) {
+    this.workspaceDir = getSyntaxWorkspaceByBaseDir(ctx.baseDir, cfg.dumpSyntaxAssetFolderRelativePath)
+  }
 
   async init(): Promise<void> {
     if (this.cfg.verboseConsoleLog) {

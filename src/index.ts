@@ -8,11 +8,12 @@ import { } from 'koishi-plugin-puppeteer'
 import type { Config } from './config'
 import { Config as ConfigSchema } from './config'
 import { createUsage } from './usage'
-import { renderMarkdownImage, FormatType } from './dump-markdown'
-import * as dumpTypst from './dump-typst'
-import { registerRenderForwardCommand } from './render-forward'
-import { checkAndDownloadFonts } from './font-utils'
-import { registerQQQuoteCacheMiddleware, resolveQQQuotedMessageObject } from './qq-quote'
+import { renderMarkdownImage, FormatType } from './dump/markdown'
+import * as dumpTypst from './dump/typst'
+import { registerRenderForwardCommand } from './render/forward'
+import { checkAndDownloadFonts } from './utils/font'
+import { ensureSyntaxAssets } from './utils/syntax'
+import { registerQQQuoteCacheMiddleware, resolveQQQuotedMessageObject } from './qq'
 
 const pkg = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8')
@@ -253,6 +254,9 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
 export async function apply(ctx: Context, cfg: Config) {
   await checkAndDownloadFonts(ctx, name, cfg).catch(err => {
     ctx.logger.warn(`[${name}] 字体下载失败，部分功能可能异常: ${err}`)
+  })
+  await ensureSyntaxAssets(ctx, name, cfg).catch(err => {
+    ctx.logger.warn(`[${name}] 语法高亮文件复制失败，Typst 语法高亮可能异常: ${err}`)
   })
   registerQQQuoteCacheMiddleware(ctx)
   registerAllDumpCommands(ctx, cfg)

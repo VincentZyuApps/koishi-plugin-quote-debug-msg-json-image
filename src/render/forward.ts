@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { Context, h } from 'koishi'
 import { } from 'koishi-plugin-puppeteer'
-import type { Config } from './config'
-import { resolveConfiguredFontPath } from './font-utils'
+import type { Config } from '../config'
+import { resolveConfiguredFontPath } from '../utils/font'
 
 /** QQ用户ID到头像base64的映射 */
 type AvatarMap = Map<number, string>

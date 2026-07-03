@@ -82,6 +82,13 @@ dump-toml</code></pre>
 
 <hr>
 
+<h2>🌈 语法高亮资源</h2>
+<p>npm 包内保留 <code>syntaxes</code> 目录作为内置种子文件。插件启动时会把 JSON/YAML/TOML 的 <code>sublime-syntax</code> 文件复制到：</p>
+<pre><code>ctx.baseDir/data/assets/quote-debug-msg-json-image/syntaxes</code></pre>
+<p>目录由 <code>dumpSyntaxAssetFolderRelativePath</code> 配置，表示相对于 Koishi 根目录 <code>ctx.baseDir</code> 的文件夹路径；文件名由 <code>dumpJsonSyntaxFilename</code> / <code>dumpYamlSyntaxFilename</code> / <code>dumpTomlSyntaxFilename</code> 配置。Typst 编译器 workspace 会使用 <code>ctx.baseDir/data/assets/quote-debug-msg-json-image</code>，避免运行时写入插件包目录。</p>
+
+<hr>
+
 <p><b>📦 仓库地址：</b> <a href="https://gitee.com/vincent-zyu/koishi-plugin-quote-debug-msg-json-image" target="_blank">Gitee</a></p>
 `
 }

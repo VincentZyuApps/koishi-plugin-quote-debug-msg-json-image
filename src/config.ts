@@ -1,6 +1,6 @@
 import { Schema } from 'koishi'
-import path from 'node:path'
-import { DEFAULT_FONT_RELEASE_URLS, getSchemaFontPath } from './font-utils'
+import { DEFAULT_FONT_RELEASE_URLS, getSchemaFontPath } from './utils/font'
+import { SYNTAX_ASSET_PARTS, SYNTAX_FILES } from './utils/syntax'
 
 export interface Config {
   // ===== ⚙️ 基础设置 =====
@@ -27,9 +27,10 @@ export interface Config {
   dumpTypstCodeBlockFillColor: string // 🧩 Typst 代码块填充色
   dumpTypstCodeBlockStrokeColor: string // 📐 Typst 代码块描边色
   dumpTypstStatsTextColor: string // 📊 Typst 统计信息文字颜色
-  dumpJsonSyntaxPath: string // 📄 JSON 语法高亮文件路径
-  dumpYamlSyntaxPath: string // 📄 YAML 语法高亮文件路径
-  dumpTomlSyntaxPath: string // 📄 TOML 语法高亮文件路径
+  dumpSyntaxAssetFolderRelativePath: string[] // 🌈 语法高亮文件夹相对路径
+  dumpJsonSyntaxFilename: string // 📄 JSON 语法高亮文件名
+  dumpYamlSyntaxFilename: string // 📄 YAML 语法高亮文件名
+  dumpTomlSyntaxFilename: string // 📄 TOML 语法高亮文件名
 
   // ===== 🔤 字体设置 =====
   downloadFontsFromRelease: boolean // 📥 是否从 Release 自动下载字体
@@ -145,18 +146,22 @@ export const Config: Schema<Config> = Schema.intersect([
       .role('color')
       .default('#8788a5')
       .description('📊 Typst 统计信息文字颜色'),
-    dumpJsonSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/json.sublime-syntax.yml'))
+    dumpSyntaxAssetFolderRelativePath: Schema.array(String)
+      .role('table')
+      .default([...SYNTAX_ASSET_PARTS])
+      .description('🌈 语法高亮文件夹相对路径。请依次填写相对于 Koishi 根目录 ctx.baseDir 的文件夹路径'),
+    dumpJsonSyntaxFilename: Schema.string()
+      .default(SYNTAX_FILES.JSON)
       .role('textarea', { rows: [2, 5] })
-      .description('📄 JSON 语法高亮文件路径（sublime-syntax 格式）'),
-    dumpYamlSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/yaml.sublime-syntax.yml'))
+      .description('📄 JSON 语法高亮文件名'),
+    dumpYamlSyntaxFilename: Schema.string()
+      .default(SYNTAX_FILES.YAML)
       .role('textarea', { rows: [2, 5] })
-      .description('📄 YAML 语法高亮文件路径（sublime-syntax 格式）'),
-    dumpTomlSyntaxPath: Schema.string()
-      .default(path.resolve(__dirname, '../syntaxes/toml.sublime-syntax.yml'))
+      .description('📄 YAML 语法高亮文件名'),
+    dumpTomlSyntaxFilename: Schema.string()
+      .default(SYNTAX_FILES.TOML)
       .role('textarea', { rows: [2, 5] })
-      .description('📄 TOML 语法高亮文件路径（sublime-syntax 格式）'),
+      .description('📄 TOML 语法高亮文件名'),
   }).description('🧾 dump 指令设置'),
 
   // ===== 🔤 字体设置 =====
