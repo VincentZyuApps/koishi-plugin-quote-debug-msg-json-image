@@ -94,9 +94,9 @@ export function buildQQDumpMarkdown(
   const fence = createMarkdownFence(formattedData)
   const closingPrefix = formattedData.endsWith('\n') ? '' : '\n'
   return [
-    QQ_MARKDOWN_RENDER_HINT,
-    '',
     `# Quote Message Debug (${format.toUpperCase()})`,
+    '',
+    QQ_MARKDOWN_RENDER_HINT,
     '',
     `${fence}${format}`,
     `${formattedData}${closingPrefix}${fence}`,
