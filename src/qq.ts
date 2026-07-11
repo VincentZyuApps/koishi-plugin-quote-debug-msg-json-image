@@ -2,6 +2,8 @@ import type { Context, Session } from 'koishi'
 
 const QQ_MSG_TYPE_QUOTE = 103
 const MAX_CACHE_SIZE = 300
+const QQ_PASSIVE_MESSAGE_TIMEOUT = 5 * 60 * 1000 - 2000
+const QQ_MARKDOWN_RENDER_HINT = '> 如果你看到这行变灰色，说明markdown格式生效'
 
 const qqMsgCache = new Map<string, any>()
 const qqMsgIdToRefIdxCache = new Map<string, string>()
@@ -62,6 +64,98 @@ function buildDebugObject(source: string, payload: object): object {
     _quote_debug_source: source,
     ...payload,
   }
+}
+
+function createMarkdownFence(content: string): string {
+  let longestRun = 0
+  let currentRun = 0
+  for (const char of content) {
+    if (char === '`') {
+      currentRun += 1
+      longestRun = Math.max(longestRun, currentRun)
+    } else {
+      currentRun = 0
+    }
+  }
+  return '`'.repeat(Math.max(3, longestRun + 1))
+}
+
+function resolveQQReplyReferenceId(session: Session): string | undefined {
+  const d = getQQRawEvent(session)
+  const messageId = d?.id || session.messageId || ''
+  const { msgIdx } = parseQQMessageIndices(d)
+  return msgIdx || qqMsgIdToRefIdxCache.get(messageId) || messageId || undefined
+}
+
+export function buildQQDumpMarkdown(
+  formattedData: string,
+  format: 'json' | 'yaml' | 'toml',
+): string {
+  const fence = createMarkdownFence(formattedData)
+  const closingPrefix = formattedData.endsWith('\n') ? '' : '\n'
+  return [
+    QQ_MARKDOWN_RENDER_HINT,
+    '',
+    `# Quote Message Debug (${format.toUpperCase()})`,
+    '',
+    `${fence}${format}`,
+    `${formattedData}${closingPrefix}${fence}`,
+  ].join('\n')
+}
+
+export async function sendQQDumpMarkdown(
+  session: Session,
+  markdown: string,
+  includeMessageReference: boolean,
+): Promise<void> {
+  if (session.platform !== 'qq') {
+    throw new Error('QQ 原生 Markdown 仅能通过 QQ 平台发送')
+  }
+
+  const internal = (session.bot as any).internal
+  const payload: any = {
+    msg_type: 2,
+    markdown: { content: markdown },
+  }
+
+  const timestamp = session.timestamp
+  const isRecent = typeof timestamp === 'number'
+    && Date.now() - timestamp < QQ_PASSIVE_MESSAGE_TIMEOUT
+
+  if (session.messageId && isRecent) {
+    const state = session as any
+    state.seq ||= 0
+    payload.msg_id = session.messageId
+    payload.msg_seq = ++state.seq
+  } else {
+    const eventId = (session as any).qq?.id
+    if (eventId && isRecent) payload.event_id = eventId
+  }
+
+  if (includeMessageReference) {
+    const referenceId = resolveQQReplyReferenceId(session)
+    if (referenceId) {
+      payload.message_reference = {
+        message_id: referenceId,
+        ignore_get_message_error: true,
+      }
+    }
+  }
+
+  if (session.isDirect) {
+    if (typeof internal?.sendPrivateMessage !== 'function') {
+      throw new Error('当前 QQ 适配器未提供 internal.sendPrivateMessage()')
+    }
+    const userId = session.userId || session.channelId.replace(/^private:/, '')
+    if (!userId) throw new Error('无法确定 QQ 私聊目标用户')
+    await internal.sendPrivateMessage(userId, payload)
+    return
+  }
+
+  if (typeof internal?.sendMessage !== 'function') {
+    throw new Error('当前 QQ 适配器未提供 internal.sendMessage()')
+  }
+  await internal.sendMessage(session.channelId, payload)
 }
 
 export function registerQQQuoteCacheMiddleware(ctx: Context) {

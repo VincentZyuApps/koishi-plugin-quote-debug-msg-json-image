@@ -14,13 +14,14 @@
 <p>💬 插件使用问题 / 🐛 Bug反馈 / 👨‍💻 插件开发交流，欢迎加入QQ群：<b>1085190201</b></p>
 <p>💡 在群里直接艾特我，回复得更快。</p>
 
-回复一条消息，将其渲染为 JSON/YAML/TOML 格式图片，避免消息对象过长导致聊天平台刷屏或截断。dump 指令支持 Typst / Markdown 两种图片渲染方式，并适配 OneBot 与 QQ 官方 Bot 的引用消息。另提供 `render-forward` 指令，将 OneBot 合并转发消息渲染成图片。
+回复一条消息，将消息对象序列化为 JSON/YAML/TOML。dump 指令支持 Typst / Markdown 两种图片渲染方式，也支持 QQ 原生 Markdown；在其他平台选择 `qq-markdown` 时会发送 Markdown 源文本。另提供 `render-forward` 指令，将 OneBot 合并转发消息渲染成图片。
 
 ## ✨ 功能特性
 
-- 📋 **dump 指令**：将消息对象序列化为 JSON/YAML/TOML，并渲染为图片
+- 📋 **dump 指令**：将消息对象序列化为 JSON/YAML/TOML，并输出为图片、合并转发或 Markdown
 - 🤖 **QQ 官方 Bot 引用适配**：解析 QQ 原始事件中的 `msg_idx` / `ref_msg_idx` / `message_reference` / `msg_elements`
 - 🎨 **双渲染引擎**：支持 Typst（推荐）和 Markdown
+- 💬 **QQ 原生 Markdown**：通过 QQ internal API 发送 fenced code block，其他平台发送同一份 Markdown 源文本
 - 🌈 **代码语法高亮**：JSON/YAML/TOML 自动语法着色
 - 😀 **彩色 emoji**：Typst 模式使用 `NotoColorEmoji.ttf` 修复 raw JSON/YAML/TOML 中的 emoji 渲染
 - 📨 **render-forward 指令**：将 OneBot 合并转发消息渲染成图片
@@ -40,7 +41,7 @@ optional:
 
 说明：
 
-- `koishi-plugin-markdown-to-image-service`：可选服务，仅在使用 Markdown 渲染模式时需要。
+- `koishi-plugin-markdown-to-image-service`：可选服务，仅在使用 Markdown 图片渲染模式时需要；`qq-markdown` 不依赖该服务。
 - `koishi-plugin-puppeteer`：可选服务，仅在使用 `render-forward` 合并转发截图渲染时需要。
 - Typst dump 是核心路径，不依赖 `markdownToImage` 或 `puppeteer` 服务。
 - 当前版本 **不再依赖** `koishi-plugin-to-image-service`。
@@ -72,7 +73,8 @@ optional:
 
 对应功能缺失时的行为：
 
-- 选择 Markdown 渲染但未启用 `markdownToImage` 服务时，会提示启用 `koishi-plugin-markdown-to-image-service` 或改用 Typst。
+- 选择 Markdown 图片渲染但未启用 `markdownToImage` 服务时，会提示启用 `koishi-plugin-markdown-to-image-service` 或改用 Typst。
+- `qq-markdown` 会直接发送完整 Markdown，不会在发送失败或内容过长时回退为图片。
 - `render-forward` 命令会通过 `ctx.inject(['puppeteer'], ...)` 注册；未启用 `puppeteer` 服务时，该命令不会注册。
 
 ### 渲染流程
@@ -81,9 +83,12 @@ optional:
 dump-json / dump-yaml / dump-toml
   -> 获取被引用消息 / 当前消息
   -> JSON / YAML / TOML 序列化
-  -> Typst 模式:
+  -> qq-markdown:
+       QQ -> 原生 Markdown
+       其他平台 -> Markdown 源文本
+  -> image / forward + Typst 模式:
        typst-ts-node-compiler -> SVG -> @resvg/resvg-js -> PNG
-  -> Markdown 模式:
+  -> image / forward + Markdown 模式:
        markdown-to-image-service -> 图片
 ```
 
@@ -91,12 +96,16 @@ dump-json / dump-yaml / dump-toml
 flowchart TD
   A["dump-json / dump-yaml / dump-toml"] --> B["获取被引用消息 / 当前消息"]
   B --> C["JSON / YAML / TOML 序列化"]
-  C --> D{"渲染模式"}
-  D -->|"Typst"| E["typst-ts-node-compiler"]
+  C --> D{"消息模式"}
+  D -->|"qq-markdown"| J{"QQ 平台"}
+  J -->|"是"| K["QQ 原生 Markdown"]
+  J -->|"否"| L["Markdown 源文本"]
+  D -->|"image / forward"| M{"图片渲染模式"}
+  M -->|"Typst"| E["typst-ts-node-compiler"]
   E --> F["SVG"]
   F --> G["@resvg/resvg-js"]
   G --> H["PNG 图片"]
-  D -->|"Markdown"| I["markdown-to-image-service"]
+  M -->|"Markdown"| I["markdown-to-image-service"]
   I --> H
 ```
 
@@ -131,7 +140,7 @@ dump-toml
 可用选项：
 
 - `-r, --reply-mode <typst|markdown>`：选择渲染引擎。
-- `-m, --message-mode <forward|image>`：回复模式。`forward` 仅 `onebot` / `red` / `discord` 平台可用，其他平台会自动回退为 `image`。
+- `-m, --message-mode <forward|image|qq-markdown>`：回复模式。`forward` 仅 `onebot` / `red` / `discord` 平台可用；`qq-markdown` 在 QQ 平台发送原生 Markdown，在其他平台发送 Markdown 源文本。
 - `-s, --self`：解析当前消息本身，而不是被引用的消息。
 
 效果预览：
@@ -168,9 +177,14 @@ QQ 官方 Bot 平台下，Koishi 不一定会把被引用消息填入 `session.q
 
 插件还会注册一个轻量 middleware，缓存机器人在线期间收到的 QQ 消息索引。dump 指令会优先尝试通过 `bot.internal.getMessage()` 获取原始被引用消息；失败时再 fallback 到 `session.quote`、内存缓存或 `msg_elements[0]`。
 
+`dumpMessageMode=qq-markdown` 在 QQ 群聊/C2C 中直接调用 `bot.internal.sendMessage()` / `sendPrivateMessage()`，发送 `msg_type=2` 与 `markdown.content`。默认不附加 `message_reference`；只有 `enableQuote=true` 且 `qqMarkdownRespectEnableQuote=true` 时，才会优先使用当前事件的 `msg_idx` 或缓存映射构造 `message_reference`，无法解析时再尝试当前 `messageId`。
+
 注意：
 
 - `dumpMessageMode=forward` 仅 `onebot` / `red` / `discord` 平台可用；QQ 官方 Bot 等其他平台会自动回退为 `image`。
+- `enableQuote` 会应用于图片和非 QQ Markdown 源文本；QQ 原生 Markdown 还必须开启 `qqMarkdownRespectEnableQuote` 才会附加引用。
+- `qqMarkdownRespectEnableQuote` 默认为 `false`。该能力属于实验性兼容选项，开启后部分 QQ 适配器或接口组合可能把 Markdown 当作普通文本显示。
+- `dumpMessageMode=qq-markdown` 发送失败或内容过长时只报告错误，不截断、不拆分，也不回退为图片。
 - `render-forward` 仍然是 OneBot 合并转发消息专用功能，不是 QQ 官方普通引用消息渲染。
 
 ## 🔤 字体与 emoji
@@ -263,7 +277,7 @@ Typst 生成的 SVG 会使用 CSS 变量设置字形颜色，例如：
 
 `@resvg/resvg-js` 对这类 CSS 变量支持不完整。插件在 SVG 转 PNG 前会移除相关规则，让颜色从父级 `fill` 继承，避免文字颜色异常。
 
-### Markdown 渲染
+### Markdown 图片渲染
 
 Markdown 渲染使用 `koishi-plugin-markdown-to-image-service`，通过标准 Markdown fenced code block 实现语法高亮：
 
@@ -272,6 +286,22 @@ Markdown 渲染使用 `koishi-plugin-markdown-to-image-service`，通过标准 M
 {"key": "value"}
 ```
 ````
+
+### QQ 原生 Markdown 与源文本
+
+选择 `dumpMessageMode=qq-markdown` 时，插件会构造一份不依赖 `markdownToImage` 的 Markdown 文档：
+
+````markdown
+> 如果你看到这行变灰色，说明markdown格式生效。
+
+# Quote Message Debug (JSON)
+
+```json
+{"key": "value"}
+```
+````
+
+QQ 群聊/C2C 会通过原生 Markdown payload 发送。其他平台会把同一份内容作为 `h.text()` 源文本发送，避免 dump 中的 `<at>`、`<message>` 等片段被 Koishi 当成消息元素解析。代码围栏长度会根据数据中最长的连续反引号动态增加，避免消息内容提前闭合 fenced code block。
 
 ### 合并转发渲染
 
@@ -290,7 +320,8 @@ Markdown 渲染使用 `koishi-plugin-markdown-to-image-service`，通过标准 M
 |---|---|---|---|
 | `dumpRenderMode` | `typst` / `markdown` | `typst` | 默认渲染引擎 |
 | `dumpTypstFooterText` | `string` | `🧩 Generated by *koishi-plugin-quote-debug-msg-json-image*` | Typst 图片底部署名文本 |
-| `dumpMessageMode` | `forward` / `image` | `image` | 回复模式，`forward` 仅 `onebot` / `red` / `discord` 可用，其他平台会回退到 `image` |
+| `dumpMessageMode` | `forward` / `image` / `qq-markdown` | `image` | `qq-markdown` 在 QQ 发送原生 Markdown，在其他平台发送 Markdown 源文本；失败不回退图片 |
+| `qqMarkdownRespectEnableQuote` | `boolean` | `false` | QQ 原生 Markdown 是否在 `enableQuote=true` 时附加实验性的 `message_reference` |
 | `maxJsonTextLength` | `number` | `2222` | 合并转发模式下预览文本最大长度 |
 | `dumpTypstRenderScale` | `number` | `2.33` | Typst 渲染缩放倍率 |
 | `dumpTypstPageBgColor` | `string` | `#f9efe2` | Typst 页面背景色 |

@@ -5,16 +5,17 @@ import { SYNTAX_ASSET_PARTS, SYNTAX_FILES } from './utils/syntax'
 export interface Config {
   // ===== ⚙️ 基础设置 =====
   enableQuote: boolean // 💬 bot 响应消息时是否引用触发消息
+  qqMarkdownRespectEnableQuote: boolean // 🔗 QQ 原生 Markdown 是否尊重 enableQuote 并附加引用
   useNapcatGetMsgInsteadOnOnebot: boolean // 🤖 OneBot 平台是否优先使用 Napcat get_msg 获取消息对象
 
   // ===== 🧾 dump 指令设置 =====
-  maxJsonTextLength: number // 📏 JSON/YAML/TOML 文本最大显示长度
+  maxJsonTextLength: number // 📏 合并转发预览文本最大显示长度
   dumpJsonCommandName: string // 🧾 dump-json 指令名称
   dumpYamlCommandName: string // 🧾 dump-yaml 指令名称
   dumpTomlCommandName: string // 🧾 dump-toml 指令名称
   dumpRenderMode: 'typst' | 'markdown' // 🎨 dump 指令默认渲染方式
   dumpTypstFooterText: string // 🧩 Typst 图片底部署名文本
-  dumpMessageMode: 'forward' | 'image' // 💬 dump 指令回复模式
+  dumpMessageMode: 'forward' | 'image' | 'qq-markdown' // 💬 dump 指令回复模式
   dumpTypstRenderScale: number // 🔍 Typst 渲染缩放倍率
   dumpTypstPageBgColor: string // 🧁 Typst 背景色
   dumpTypstTextColor: string // 🖋️ Typst 正文文本颜色
@@ -60,6 +61,9 @@ export const Config: Schema<Config> = Schema.intersect([
     enableQuote: Schema.boolean()
       .default(true)
       .description('💬 是否在 bot 响应消息时引用触发消息（forward 合并转发除外，因为 onebot 的 合并转发消息 不支持和quote消息段出现在同一个消息内）'),
+    qqMarkdownRespectEnableQuote: Schema.boolean()
+      .default(false)
+      .description('🔗 QQ 原生 Markdown 是否尊重 enableQuote 并附加 message_reference（实验性，开启后可能导致 Markdown 被当作普通文本）'),
     useNapcatGetMsgInsteadOnOnebot: Schema.boolean()
       .default(true)
       .description('🤖 如果是 onebot 平台，msgObj 使用 Napcat 的 `get_msg` 接口获取，而不是 koishi 的 `await session.bot.getMessage(` ')
@@ -70,7 +74,7 @@ export const Config: Schema<Config> = Schema.intersect([
     maxJsonTextLength: Schema.number()
       .default(2222)
       .min(50).max(10000).step(1)
-      .description('📏 JSON/YAML/TOML 文本最大显示长度，超过将截断'),
+      .description('📏 合并转发模式中的 JSON/YAML/TOML 预览文本最大显示长度，超过将截断'),
     dumpJsonCommandName: Schema.string()
       .default('dump-json')
       .description('🧾 dump-json 指令名称，可自定义'),
@@ -94,6 +98,7 @@ export const Config: Schema<Config> = Schema.intersect([
     dumpMessageMode: Schema.union([
       Schema.const('forward').description('📦 合并转发模式（仅 onebot / red / discord 平台可用）'),
       Schema.const('image').description('🖼️ 仅发送图片（默认，跨平台稳定）'),
+      Schema.const('qq-markdown').description('💬 QQ 平台发送原生 Markdown，其他平台发送 Markdown 源文本'),
     ])
       .role('radio')
       .default('image')

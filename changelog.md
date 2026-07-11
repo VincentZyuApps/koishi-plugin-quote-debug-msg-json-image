@@ -1,5 +1,22 @@
 # 📜 Changelog
 
+## 🚧 Unreleased
+
+### ✨ Added
+
+- 💬 为 `dump-json` / `dump-yaml` / `dump-toml` 新增 `qq-markdown` 消息模式。
+- 🤖 QQ 群聊/C2C 通过统一的 `bot.internal.sendMessage()` / `sendPrivateMessage()` payload 发送原生 Markdown。
+- 🧾 非 QQ 平台在 `qq-markdown` 模式下发送同一份 Markdown 源文本，并用 `h.text()` 防止 dump 内容被解析成消息元素。
+- 🔗 新增 `qqMarkdownRespectEnableQuote` 配置，默认关闭；仅当它与 `enableQuote` 同时开启时，QQ 原生 Markdown 才会尝试构造 best-effort `message_reference`。
+- 🧱 JSON/YAML/TOML 原生 Markdown 使用动态 fenced code block，避免内容中的连续反引号提前闭合代码块。
+
+### 🔄 Changed
+
+- 📝 `qq-markdown` 输出统一包含 Markdown 生效提示与 `# Quote Message Debug (FORMAT)` 标题。
+- 🛡️ QQ 原生 Markdown 默认不再附加 `message_reference`，避免部分接口组合将 Markdown 退化为普通文本。
+- 🚫 QQ 原生 Markdown 发送失败、内容过长或平台拒绝时不会回退图片、截断或拆分，只返回错误信息。
+- 📏 `maxJsonTextLength` 明确仅控制合并转发模式的文本预览长度。
+
 ## 🧩 v0.4.4-beta.8+20260703
 
 ### 🔄 Changed

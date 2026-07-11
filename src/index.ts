@@ -6,12 +6,19 @@ import TOML from '@iarna/toml'
 import type { Config } from './config'
 import { Config as ConfigSchema } from './config'
 import { createUsage } from './usage'
-import { renderMarkdownImage, FormatType } from './dump/markdown'
-import * as dumpTypst from './dump/typst'
-import { registerRenderForwardCommand } from './render/forward'
+import { renderMarkdownImage, FormatType } from './dump-formats/markdown'
+import * as dumpTypst from './dump-formats/typst'
+import { registerRenderForwardCommand } from './render-forward/render'
 import { checkAndDownloadFonts } from './utils/font'
 import { ensureSyntaxAssets } from './utils/syntax'
-import { registerQQQuoteCacheMiddleware, resolveQQQuotedMessageObject } from './qq'
+import {
+  buildQQDumpMarkdown,
+  registerQQQuoteCacheMiddleware,
+  resolveQQQuotedMessageObject,
+  sendQQDumpMarkdown,
+} from './qq'
+
+export const reusable = true    // ♻️ 声明此插件可重用，允许同一插件多实例配置。
 
 const pkg = JSON.parse(
   fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8')
@@ -57,11 +64,15 @@ function resolveReplyMode(cfg: Config, raw?: string): 'typst' | 'markdown' {
   return cfg.dumpRenderMode === 'markdown' ? 'markdown' : 'typst'
 }
 
-function resolveMessageMode(cfg: Config, raw: string | undefined, platform: string): 'forward' | 'image' {
+function resolveMessageMode(
+  cfg: Config,
+  raw: string | undefined,
+  platform: string,
+): 'forward' | 'image' | 'qq-markdown' {
   const normalized = (raw || '').trim().toLowerCase()
-  const mode = normalized === 'forward' || normalized === 'image'
+  const mode = normalized === 'forward' || normalized === 'image' || normalized === 'qq-markdown'
     ? normalized
-    : (cfg.dumpMessageMode === 'image' ? 'image' : 'forward')
+    : cfg.dumpMessageMode
   if (mode === 'forward' && !FORWARD_MESSAGE_MODE_PLATFORMS.has((platform || '').toLowerCase())) return 'image'
   return mode
 }
@@ -203,7 +214,7 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
   for (const cmd of dumpCommands) {
     ctx.command(cmd.name, cmd.desc)
       .option('replyMode', '-r, --reply-mode <mode:string> 回复渲染模式 (typ/typst 或 md/markdown)')
-      .option('messageMode', '-m, --message-mode <mode:string> 回复消息模式 (forward 或 image；forward 仅 onebot/red/discord 可用)')
+      .option('messageMode', '-m, --message-mode <mode:string> 回复消息模式 (forward、image 或 qq-markdown)')
       .option('self', '-s, --self 解析当前消息本身而不是引用的消息')
       .action(async ({ session, options }) => {
         try {
@@ -214,16 +225,36 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
             return
           }
 
-          const wasTrimmed = trimForwardMessages(msgObj)
-          if (wasTrimmed) {
-            ctx.logger.warn(`[${cmd.name}] 检测到尝试dump合并转发，已自动裁剪，只保留第一条消息（递归处理）`)
+          const messageMode = resolveMessageMode(cfg, options?.messageMode, session.platform)
+
+          if (messageMode !== 'qq-markdown') {
+            const wasTrimmed = trimForwardMessages(msgObj)
+            if (wasTrimmed) {
+              ctx.logger.warn(`[${cmd.name}] 检测到尝试dump合并转发，已自动裁剪，只保留第一条消息（递归处理）`)
+            }
           }
 
           const formattedData = formatData(msgObj, cmd.format)
           ctx.logger.info(`[${cmd.name}] quote.message = ${formattedData}`)
 
+          if (messageMode === 'qq-markdown') {
+            const markdown = buildQQDumpMarkdown(formattedData, cmd.format)
+            if (session.platform === 'qq') {
+              await sendQQDumpMarkdown(
+                session,
+                markdown,
+                cfg.enableQuote && cfg.qqMarkdownRespectEnableQuote,
+              )
+            } else {
+              const markdownText = h.text(markdown)
+              await session.send(cfg.enableQuote
+                ? [h.quote(session.messageId), markdownText]
+                : markdownText)
+            }
+            return
+          }
+
           const replyMode = resolveReplyMode(cfg, options?.replyMode)
-          const messageMode = resolveMessageMode(cfg, options?.messageMode, session.platform)
 
           const imageBuffer = replyMode === 'markdown'
             ? await renderMarkdownImage(ctx, formattedData, cmd.format, messageMode)
@@ -243,7 +274,7 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
             await session.send(forwardMessage)
           }
         } catch (err) {
-          const errmsg = `[${cmd.name}] 获取消息或生成图片失败：${err}`
+          const errmsg = `[${cmd.name}] 获取消息或生成回复失败：${err}`
           ctx.logger.error(errmsg)
           await session.send(cfg.enableQuote ? [h.quote(session.messageId), errmsg] : errmsg)
         }

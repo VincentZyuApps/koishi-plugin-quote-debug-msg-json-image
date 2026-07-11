@@ -3,7 +3,7 @@ export function createUsage(version: string): string {
 <h1>📋 Koishi 插件：quote-debug-msg-json-image</h1>
 <h2>🎯 插件版本：v${version}</h2>
 
-<p>回复一条消息，将其渲染为 JSON/YAML/TOML 格式图片。dump 指令支持 Typst / Markdown 两种渲染模式，并适配 OneBot 与 QQ 官方 Bot 引用消息。</p>
+<p>回复一条消息，将消息对象序列化为 JSON/YAML/TOML。dump 指令支持 Typst / Markdown 图片渲染，也支持 QQ 原生 Markdown 与其他平台的 Markdown 源文本。</p>
 <p>另提供 <code>render-forward</code> 指令，用 Puppeteer 将 OneBot 合并转发消息渲染为图片。</p>
 
 <p><del>💬 插件使用问题 / 🐛 Bug反馈 / 👨‍💻 插件开发交流，欢迎加入QQ群：<b>259248174</b>（这个群G了）</del></p>
@@ -23,23 +23,25 @@ export function createUsage(version: string): string {
 <tr><th>依赖</th><th>类型</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td><b>koishi-plugin-markdown-to-image-service</b></td><td>可选 Koishi 服务</td><td>仅 Markdown 渲染模式需要 <code>markdownToImage</code> 服务</td></tr>
+<tr><td><b>koishi-plugin-markdown-to-image-service</b></td><td>可选 Koishi 服务</td><td>仅 Markdown 图片渲染模式需要 <code>markdownToImage</code> 服务；<code>qq-markdown</code> 不依赖</td></tr>
 <tr><td><b>koishi-plugin-puppeteer</b></td><td>可选 Koishi 服务</td><td>仅 <code>render-forward</code> 合并转发截图渲染需要 <code>puppeteer</code> 服务</td></tr>
 <tr><td><b>@myriaddreamin/typst-ts-node-compiler</b></td><td>npm 运行时依赖</td><td>Typst 编译为 SVG</td></tr>
 <tr><td><b>@resvg/resvg-js</b></td><td>npm 运行时依赖</td><td>Typst SVG 转 PNG</td></tr>
 </tbody>
 </table>
 
-<p><b>注意：</b>Typst dump 是核心路径，不依赖 <code>markdownToImage</code> 或 <code>puppeteer</code> 服务。未启用 <code>markdownToImage</code> 时，Markdown 模式会在执行时给出提示；<code>render-forward</code> 会通过 <code>ctx.inject(['puppeteer'], ...)</code> 注册，未启用 <code>puppeteer</code> 时不会注册该命令。</p>
+<p><b>注意：</b>Typst dump 和 <code>qq-markdown</code> 不依赖 <code>markdownToImage</code> 或 <code>puppeteer</code> 服务。未启用 <code>markdownToImage</code> 时，Markdown 图片渲染模式会在执行时给出提示；<code>render-forward</code> 会通过 <code>ctx.inject(['puppeteer'], ...)</code> 注册，未启用 <code>puppeteer</code> 时不会注册该命令。</p>
 <p><b>当前版本不再依赖</b> <code>koishi-plugin-to-image-service</code> 和 <code>koishi-plugin-w-node</code>。</p>
 
 <hr>
 
 <h2>✨ 功能特性</h2>
 <ul>
-<li>📋 <b>dump 指令</b>：将消息对象序列化为 JSON/YAML/TOML 并渲染为图片</li>
+<li>📋 <b>dump 指令</b>：将消息对象序列化为 JSON/YAML/TOML，并输出为图片、合并转发或 Markdown</li>
 <li>🤖 <b>QQ 官方 Bot 引用适配</b>：不再只依赖 <code>session.quote</code>，会解析 QQ 原始事件里的引用信息</li>
 <li>🎨 <b>双渲染引擎</b>：支持 Typst（推荐）和 Markdown 两种渲染模式</li>
+<li>💬 <b>QQ 原生 Markdown</b>：QQ 群聊/C2C 发送原生 Markdown，其他平台发送同一份 Markdown 源文本</li>
+<li>🔗 <b>QQ Markdown 引用开关</b>：默认不附加引用；同时开启 <code>enableQuote</code> 与 <code>qqMarkdownRespectEnableQuote</code> 后才会尝试发送 <code>message_reference</code></li>
 <li>🌈 <b>代码语法高亮</b>：JSON/YAML/TOML 自动语法着色</li>
 <li>😀 <b>彩色 emoji</b>：Typst 模式使用 Noto Color Emoji 修复 raw JSON/YAML/TOML 中的 emoji 渲染</li>
 <li>📨 <b>render-forward</b>：将 OneBot 合并转发消息渲染成图片</li>
@@ -68,7 +70,7 @@ dump-toml
 <p><b>可用选项：</b></p>
 <ul>
 <li><code>-r, --reply-mode &lt;typst|markdown&gt;</code> - 选择渲染引擎</li>
-<li><code>-m, --message-mode &lt;forward|image&gt;</code> - 回复模式；<code>forward</code> 仅 <code>onebot</code> / <code>red</code> / <code>discord</code> 平台可用，其他平台会自动回退为 <code>image</code></li>
+<li><code>-m, --message-mode &lt;forward|image|qq-markdown&gt;</code> - 回复模式；<code>qq-markdown</code> 在 QQ 发送原生 Markdown，在其他平台发送 Markdown 源文本，失败不回退图片</li>
 <li><code>-s, --self</code> - 解析当前消息本身，而不是被引用的消息</li>
 </ul>
 
