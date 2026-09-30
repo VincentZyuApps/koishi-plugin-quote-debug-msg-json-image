@@ -31,7 +31,7 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
 
         // 调试日志：输出消息对象
         if (cfg.verboseConsoleLog) {
-          ctx.logger.info(`[render-forward] 获取到的消息对象: ${JSON.stringify(msgObj, null, 2)}`)
+          ctx.logger.info(`🧾 [render-forward] 获取到的消息对象: ${JSON.stringify(msgObj, null, 2)}`)
         }
 
         // 检查是否为合并转发消息
@@ -44,7 +44,7 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
               `- message 是否为数组: ${Array.isArray(message)}\n` +
               `- message 长度: ${Array.isArray(message) ? message.length : 'N/A'}\n` +
               `- message 内容: ${JSON.stringify(message, null, 2)}`
-            ctx.logger.warn(`[render-forward] 消息不是合并转发${debugText}`)
+            ctx.logger.warn(`⚠️ [render-forward] 消息不是合并转发${debugText}`)
 
             // 仅在 verboseSessionLog 开启时才在用户消息中包含调试信息
             if (cfg.verboseSessionLog) {
@@ -66,7 +66,7 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
           if (cfg.verboseConsoleLog) {
             const message = getForwardMessageElements(msgObj)
             const forwardData = message?.[0]?.data
-            ctx.logger.warn(`[render-forward] 无法获取合并转发内容，forward.data = ${JSON.stringify(forwardData, null, 2)}`)
+            ctx.logger.warn(`⚠️ [render-forward] 无法获取合并转发内容，forward.data = ${JSON.stringify(forwardData, null, 2)}`)
           }
           const hint = '无法获取合并转发消息的内容，可能是消息格式不支持。\n' +
             '⚠️ 可能原因：\n' +
@@ -103,11 +103,11 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
         if (cfg.renderForwardPrefetchAvatar !== false) {
           const userIds = collectAllUserIds(forwardContent, maxDepth)
           if (cfg.verboseConsoleLog) {
-            ctx.logger.info(`[render-forward] 预获取头像，共 ${userIds.size} 个不重复的用户ID: ${Array.from(userIds).join(', ')}`)
+            ctx.logger.info(`🔄 [render-forward] 预获取头像，共 ${userIds.size} 个不重复的用户ID: ${Array.from(userIds).join(', ')}`)
           }
           avatarMap = await prefetchAvatars(ctx, userIds)
           if (cfg.verboseConsoleLog) {
-            ctx.logger.info(`[render-forward] 成功预获取 ${avatarMap.size}/${userIds.size} 个头像`)
+            ctx.logger.info(`✅ [render-forward] 成功预获取 ${avatarMap.size}/${userIds.size} 个头像`)
           }
         }
 
@@ -172,7 +172,7 @@ export function registerRenderForwardCommand(ctx: Context, cfg: Config) {
 
       } catch (err) {
         const errmsg = `[render_forward] 渲染合并转发消息失败：${err}`
-        ctx.logger.error(errmsg)
+        ctx.logger.error(`❌ ${errmsg}`)
         await session.send(cfg.enableQuote ? [h.quote(session.messageId), errmsg] : errmsg)
       }
     })

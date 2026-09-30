@@ -98,11 +98,11 @@ class TypstRenderer {
 
   async init(): Promise<void> {
     if (this.cfg.verboseConsoleLog) {
-      this.logger.info(`[Typst] 开始加载 Typst 模块: ${this.typstModuleName}`)
-      this.logger.info(`[Typst] 工作目录: ${this.workspaceDir}`)
+      this.logger.info(`🔄 [Typst] 开始加载 Typst 模块: ${this.typstModuleName}`)
+      this.logger.info(`📁 [Typst] 工作目录: ${this.workspaceDir}`)
     }
     this.typst = await import(this.typstModuleName)
-    this.logger.info('Typst 模块加载成功')
+    this.logger.info('✅ Typst 模块加载成功')
     this.initialized = true
   }
 
@@ -122,24 +122,24 @@ class TypstRenderer {
         fontArgs.push({ fontBlobs: [buf] })
         loadedNames.push(path.basename(fp))
       } catch (err) {
-        this.logger.warn(`[Typst] 加载字体失败: ${fp}, 错误: ${err}`)
+        this.logger.warn(`⚠️ [Typst] 加载字体失败: ${fp}, 错误: ${err}`)
       }
     }
 
     if (fontArgs.length === 0) {
-      this.logger.warn('[Typst] 未加载到任何字体，将依赖系统字体 fallback')
+      this.logger.warn('⚠️ [Typst] 未加载到任何字体，将依赖系统字体 fallback')
     }
 
     if (!this.compiler) {
       if (this.cfg.verboseConsoleLog) {
-        this.logger.info(`[Typst] 创建编译器，工作目录: ${this.workspaceDir}`)
-        this.logger.info(`[Typst] 加载 ${fontArgs.length} 个字体: ${loadedNames.join(', ') || '无'}`)
+        this.logger.info(`🛠️ [Typst] 创建编译器，工作目录: ${this.workspaceDir}`)
+        this.logger.info(`🔤 [Typst] 加载 ${fontArgs.length} 个字体: ${loadedNames.join(', ') || '无'}`)
       }
       this.compiler = this.typst.NodeCompiler.create({
         fontArgs,
         workspace: this.workspaceDir,
       })
-      this.logger.debug(`Typst 编译器已创建，加载了 ${fontArgs.length} 个字体`)
+      this.logger.debug(`✅ Typst 编译器已创建，加载了 ${fontArgs.length} 个字体`)
     }
 
     return this.compiler
@@ -169,22 +169,22 @@ class TypstRenderer {
     const compiler = this.getCompiler()
     try {
       if (this.cfg.verboseConsoleLog) {
-        this.logger.info(`[Typst] 开始编译 Typst 代码，长度: ${content.length} 字符`)
+        this.logger.info(`🔄 [Typst] 开始编译 Typst 代码，长度: ${content.length} 字符`)
       }
       let result = compiler.svg({ mainFileContent: content })
       result = this.fixSvgForResvg(result)
       if (this.cfg.verboseConsoleLog) {
-        this.logger.info(`[Typst] 编译完成，SVG 长度: ${result.length} 字符`)
+        this.logger.info(`✅ [Typst] 编译完成，SVG 长度: ${result.length} 字符`)
         const colorMatches = result.match(/fill="#[0-9a-fA-F]{6}"/g) || []
-        this.logger.info(`[Typst] SVG 中的颜色: ${[...new Set(colorMatches)].join(', ')}`)
+        this.logger.info(`🎨 [Typst] SVG 中的颜色: ${[...new Set(colorMatches)].join(', ')}`)
         if (result.includes('var(--glyph')) {
-          this.logger.warn(`[Typst] 警告: SVG 中仍包含 CSS 变量！`)
+          this.logger.warn(`⚠️ [Typst] 警告: SVG 中仍包含 CSS 变量！`)
         }
       }
       return result
     } catch (err) {
       if (this.cfg.verboseConsoleLog) {
-        this.logger.error(`[Typst] 编译失败: ${err}`)
+        this.logger.error(`❌ [Typst] 编译失败: ${err}`)
       }
       throw err
     } finally {
@@ -194,7 +194,7 @@ class TypstRenderer {
 
   async toPng(content: string, scale: number = 1.5): Promise<Buffer> {
     if (this.cfg.verboseConsoleLog) {
-      this.logger.info(`[Typst] 开始转换 PNG，缩放: ${scale}x`)
+      this.logger.info(`🔄 [Typst] 开始转换 PNG，缩放: ${scale}x`)
     }
     const svg = this.toSvg(content)
     const resvg = new Resvg(svg, {
@@ -203,7 +203,7 @@ class TypstRenderer {
     })
     const buffer = resvg.render().asPng()
     if (this.cfg.verboseConsoleLog) {
-      this.logger.info(`[Typst] PNG 生成完成，大小: ${(buffer.length / 1024).toFixed(2)} KB`)
+      this.logger.info(`✅ [Typst] PNG 生成完成，大小: ${(buffer.length / 1024).toFixed(2)} KB`)
     }
     return buffer
   }
@@ -353,11 +353,11 @@ export async function renderTypstImage(
 
   if (cfg.verboseConsoleLog) {
     const logger = ctx.logger('quote-debug-typst')
-    logger.info(`[Typst] 生成的 Typst 代码片段（前 500 字符）：`)
-    logger.info(typstCode.substring(0, 500))
+    logger.info(`🧾 [Typst] 生成的 Typst 代码片段（前 500 字符）：`)
+    logger.info(`🧾 ${typstCode.substring(0, 500)}`)
     const fencedMatch = typstCode.match(/(`{3,})(\w+)\n([\s\S]*?)\1/s)
     if (fencedMatch) {
-      logger.info(`[Typst] 找到 fenced code block：围栏: ${fencedMatch[1]}, 语言: ${fencedMatch[2]}, 内容长度: ${fencedMatch[3].length}`)
+      logger.info(`🔍 [Typst] 找到 fenced code block：围栏: ${fencedMatch[1]}, 语言: ${fencedMatch[2]}, 内容长度: ${fencedMatch[3].length}`)
     }
   }
 

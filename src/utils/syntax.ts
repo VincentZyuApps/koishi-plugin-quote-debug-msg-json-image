@@ -106,9 +106,9 @@ export async function ensureSyntaxAssets(ctx: Context, pluginName: string, cfg: 
     const copied = await copySyntaxFileIfNeeded(sourcePath, targetPath)
 
     if (copied) {
-      logger.info(`[${pluginName}] 已复制 ${target.label} 语法文件: ${targetPath}`)
+      logger.info(`✅ [${pluginName}] 已复制 ${target.label} 语法文件: ${targetPath}`)
     } else if (cfg.verboseConsoleLog) {
-      logger.info(`[${pluginName}] ${target.label} 语法文件已就绪: ${targetPath}`)
+      logger.info(`✅ [${pluginName}] ${target.label} 语法文件已就绪: ${targetPath}`)
     }
   }
 }

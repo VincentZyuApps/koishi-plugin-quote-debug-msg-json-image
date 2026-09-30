@@ -23,7 +23,7 @@ export async function prefetchAvatars(ctx: Context, userIds: Set<number>): Promi
       const base64 = `data:image/jpeg;base64,${buffer.toString('base64')}`
       avatarMap.set(userId, base64)
     } catch (err) {
-      ctx.logger.warn(`[render-forward] 预获取头像失败 (userId=${userId}): ${err}`)
+      ctx.logger.warn(`⚠️ [render-forward] 预获取头像失败 (userId=${userId}): ${err}`)
       // 失败时不添加到map，后续会使用原始URL
     }
   })

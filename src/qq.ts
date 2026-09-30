@@ -203,7 +203,7 @@ export async function resolveQQQuotedMessageObject(
   ].filter(Boolean))) as string[]
 
   if (verbose) {
-    ctx.logger.info(`[QQ Quote] quoteMessageIds=${quoteMessageIds.join(', ') || '(empty)'}, refMsgIdx=${refMsgIdx || '(empty)'}`)
+    ctx.logger.info(`🔍 [QQ Quote] quoteMessageIds=${quoteMessageIds.join(', ') || '(empty)'}, refMsgIdx=${refMsgIdx || '(empty)'}`)
   }
 
   const bot = session.bot as any
@@ -219,7 +219,7 @@ export async function resolveQQQuotedMessageObject(
         }
       } catch (error: any) {
         if (verbose) {
-          ctx.logger.warn(`[QQ Quote] bot.internal.getMessage 失败: guildId=${guildId}, messageId=${quoteMessageId}, error=${error?.message || error}`)
+          ctx.logger.warn(`⚠️ [QQ Quote] bot.internal.getMessage 失败: guildId=${guildId}, messageId=${quoteMessageId}, error=${error?.message || error}`)
         }
       }
     }
@@ -254,7 +254,7 @@ export async function resolveQQQuotedMessageObject(
   }
 
   if (verbose) {
-    ctx.logger.warn(`[QQ Quote] 未能解析 QQ 引用: ${JSON.stringify({
+    ctx.logger.warn(`⚠️ [QQ Quote] 未能解析 QQ 引用: ${JSON.stringify({
       messageId: d?.id || session.messageId || '',
       message_type: d?.message_type,
       message_scene: d?.message_scene,

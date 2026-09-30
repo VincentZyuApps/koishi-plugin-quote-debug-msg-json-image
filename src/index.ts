@@ -230,12 +230,12 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
           if (messageMode !== 'qq-markdown') {
             const wasTrimmed = trimForwardMessages(msgObj)
             if (wasTrimmed) {
-              ctx.logger.warn(`[${cmd.name}] 检测到尝试dump合并转发，已自动裁剪，只保留第一条消息（递归处理）`)
+              ctx.logger.warn(`⚠️ [${cmd.name}] 检测到尝试dump合并转发，已自动裁剪，只保留第一条消息（递归处理）`)
             }
           }
 
           const formattedData = formatData(msgObj, cmd.format)
-          ctx.logger.info(`[${cmd.name}] quote.message = ${formattedData}`)
+          ctx.logger.info(`🧾 [${cmd.name}] session.platform=${session.platform}, quote.message = ${formattedData}`)
 
           if (messageMode === 'qq-markdown') {
             const markdown = buildQQDumpMarkdown(formattedData, cmd.format)
@@ -275,7 +275,7 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
           }
         } catch (err) {
           const errmsg = `[${cmd.name}] 获取消息或生成回复失败：${err}`
-          ctx.logger.error(errmsg)
+          ctx.logger.error(`❌ ${errmsg}`)
           await session.send(cfg.enableQuote ? [h.quote(session.messageId), errmsg] : errmsg)
         }
       })
@@ -284,10 +284,10 @@ function registerAllDumpCommands(ctx: Context, cfg: Config) {
 
 export async function apply(ctx: Context, cfg: Config) {
   await checkAndDownloadFonts(ctx, name, cfg).catch(err => {
-    ctx.logger.warn(`[${name}] 字体下载失败，部分功能可能异常: ${err}`)
+    ctx.logger.warn(`⚠️ [${name}] 字体下载失败，部分功能可能异常: ${err}`)
   })
   await ensureSyntaxAssets(ctx, name, cfg).catch(err => {
-    ctx.logger.warn(`[${name}] 语法高亮文件复制失败，Typst 语法高亮可能异常: ${err}`)
+    ctx.logger.warn(`⚠️ [${name}] 语法高亮文件复制失败，Typst 语法高亮可能异常: ${err}`)
   })
   registerQQQuoteCacheMiddleware(ctx)
   registerAllDumpCommands(ctx, cfg)

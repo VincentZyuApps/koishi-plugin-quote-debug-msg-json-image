@@ -170,7 +170,7 @@ async function downloadManagedFont(
   await mkdir(path.dirname(filePath), { recursive: true })
 
   for (const url of getDownloadUrls(meta, cfg)) {
-    ctx.logger.info(`[${pluginName}] 下载字体资源: ${meta.name} <- ${url}`)
+    ctx.logger.info(`⬇️ [${pluginName}] 下载字体资源: ${meta.name} <- ${url}`)
     try {
       const response = await ctx.http.get(url, {
         responseType: 'arraybuffer',
@@ -179,7 +179,7 @@ async function downloadManagedFont(
       const data = Buffer.from(response as ArrayBuffer)
       const invalidReason = validateBuffer(data, meta)
       if (invalidReason) {
-        ctx.logger.warn(`[${pluginName}] 下载结果校验失败: ${meta.name}, ${invalidReason}`)
+        ctx.logger.warn(`⚠️ [${pluginName}] 下载结果校验失败: ${meta.name}, ${invalidReason}`)
         continue
       }
 
@@ -187,10 +187,10 @@ async function downloadManagedFont(
       await writeFile(tempPath, data)
       await rm(filePath, { force: true })
       await rename(tempPath, filePath)
-      ctx.logger.info(`[${pluginName}] 字体资源已就绪: ${meta.name}`)
+      ctx.logger.info(`✅ [${pluginName}] 字体资源已就绪: ${meta.name}`)
       return
     } catch (error) {
-      ctx.logger.warn(`[${pluginName}] 下载失败: ${meta.name}, ${error}`)
+      ctx.logger.warn(`⚠️ [${pluginName}] 下载失败: ${meta.name}, ${error}`)
     }
   }
 
@@ -232,19 +232,19 @@ function getDownloadTargets(ctx: Context, cfg: Config, pluginName: string): Arra
 
 export async function checkAndDownloadFonts(ctx: Context, pluginName: string, cfg: Config): Promise<void> {
   if (!cfg.downloadFontsFromRelease) {
-    ctx.logger.info(`[${pluginName}] 已关闭 Release 字体下载，跳过字体下载检查`)
+    ctx.logger.info(`⏭️ [${pluginName}] 已关闭 Release 字体下载，跳过字体下载检查`)
     return
   }
 
   const targets = getDownloadTargets(ctx, cfg, pluginName)
   for (const target of targets) {
     if (await validateFile(target.path, target.meta)) {
-      ctx.logger.info(`[${pluginName}] 字体资源校验通过: ${target.meta.name}`)
+      ctx.logger.info(`✅ [${pluginName}] 字体资源校验通过: ${target.meta.name}`)
       continue
     }
 
     if (existsSync(target.path)) {
-      ctx.logger.warn(`[${pluginName}] 字体资源存在但校验失败，将重新下载: ${target.path}`)
+      ctx.logger.warn(`⚠️ [${pluginName}] 字体资源存在但校验失败，将重新下载: ${target.path}`)
     }
     await downloadManagedFont(ctx, pluginName, cfg, target.meta, target.path)
   }
