@@ -43,6 +43,7 @@ export interface Config {
   renderForwardLxgwFontPath: string // 🔤 render-forward LXGW 风格字体路径
 
   // ===== 📨 render-forward 指令设置 =====
+  enableRenderForwardCommand: boolean // 📨 是否启用 render-forward 指令
   maxForwardNestDepth: number // 🧵 转发消息最大嵌套深度
   renderForwardCommandName: string // 🪄 render-forward 指令名称
   renderForwardDefaultStyle: 'source' | 'lxgw' // 🎨 render-forward 默认样式
@@ -109,19 +110,19 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('🔍 Typst 渲染缩放倍率（调整输出图片分辨率）'),
     dumpTypstPageBgColor: Schema.string()
       .role('color')
-      .default('#f9efe2')
+      .default('#f4f3f9')
       .description('🧁 Typst 背景色'),
     dumpTypstTextColor: Schema.string()
       .role('color')
-      .default('#2f2f35')
+      .default('#2d2b38')
       .description('🖋️ Typst 正文文本颜色'),
     dumpTypstHeaderFillColor: Schema.string()
       .role('color')
-      .default('#fab8ba')
-      .description('🎀 Typst 标题栏填充色'),
+      .default('#5546a3')
+      .description('🟣 Typst 标题栏填充色'),
     dumpTypstHeaderStrokeColor: Schema.string()
       .role('color')
-      .default('#f9b7a0')
+      .default('#45378c')
       .description('🪄 Typst 标题栏描边色'),
     dumpTypstHeaderTextColor: Schema.string()
       .role('color')
@@ -129,27 +130,27 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('✨ Typst 标题栏文字颜色'),
     dumpTypstPanelFillColor: Schema.string()
       .role('color')
-      .default('#fffbf8')
+      .default('#ffffff')
       .description('📦 Typst 内容面板填充色'),
     dumpTypstPanelStrokeColor: Schema.string()
       .role('color')
-      .default('#f3efe5')
+      .default('#e4e1f0')
       .description('🧷 Typst 内容面板描边色'),
     dumpTypstSectionTitleColor: Schema.string()
       .role('color')
-      .default('#d0908c')
+      .default('#5546a3')
       .description('🧭 Typst 小节标题颜色'),
     dumpTypstCodeBlockFillColor: Schema.string()
       .role('color')
-      .default('#ffffff')
+      .default('#faf9fe')
       .description('🧩 Typst 代码块填充色'),
     dumpTypstCodeBlockStrokeColor: Schema.string()
       .role('color')
-      .default('#edd6d0')
+      .default('#e6e3f2')
       .description('📐 Typst 代码块描边色'),
     dumpTypstStatsTextColor: Schema.string()
       .role('color')
-      .default('#8788a5')
+      .default('#7b7699')
       .description('📊 Typst 统计信息文字颜色'),
     dumpSyntaxAssetFolderRelativePath: Schema.array(String)
       .role('table')
@@ -202,6 +203,9 @@ export const Config: Schema<Config> = Schema.intersect([
 
   // ===== 📨 render-forward 指令设置 =====
   Schema.object({
+    enableRenderForwardCommand: Schema.boolean()
+      .default(true)
+      .description('📨 是否启用 render-forward 指令（多实例部署时可关闭其中一个实例以避免重复注册）'),
     maxForwardNestDepth: Schema.number()
       .default(3)
       .min(1).max(10).step(1)

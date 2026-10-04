@@ -291,7 +291,9 @@ export async function apply(ctx: Context, cfg: Config) {
   })
   registerQQQuoteCacheMiddleware(ctx)
   registerAllDumpCommands(ctx, cfg)
-  ctx.inject(['puppeteer'], (ctx) => {
-    registerRenderForwardCommand(ctx, cfg)
-  })
+  if (cfg.enableRenderForwardCommand ?? true) {
+    ctx.inject(['puppeteer'], (ctx) => {
+      registerRenderForwardCommand(ctx, cfg)
+    })
+  }
 }

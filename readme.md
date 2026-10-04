@@ -326,8 +326,8 @@ QQ 群聊/C2C 会通过原生 Markdown payload 发送。其他平台会把同一
 | `qqMarkdownRespectEnableQuote` | `boolean` | `false` | QQ 原生 Markdown 是否在 `enableQuote=true` 时附加实验性的 `message_reference` |
 | `maxJsonTextLength` | `number` | `2222` | 合并转发模式下预览文本最大长度 |
 | `dumpTypstRenderScale` | `number` | `2.33` | Typst 渲染缩放倍率 |
-| `dumpTypstPageBgColor` | `string` | `#f9efe2` | Typst 页面背景色 |
-| `dumpTypstCodeBlockFillColor` | `string` | `#ffffff` | Typst 代码块背景色 |
+| `dumpTypstPageBgColor` | `string` | `#f4f3f9` | Typst 页面背景色 |
+| `dumpTypstCodeBlockFillColor` | `string` | `#faf9fe` | Typst 代码块背景色 |
 | `dumpSyntaxAssetFolderRelativePath` | `string[]` | `['data', 'assets', 'quote-debug-msg-json-image', 'syntaxes']` | 相对于 Koishi 根目录 `ctx.baseDir` 的语法高亮文件夹路径 |
 | `dumpJsonSyntaxFilename` | `string` | `json.sublime-syntax.yml` | JSON 语法高亮文件名 |
 | `dumpYamlSyntaxFilename` | `string` | `yaml.sublime-syntax.yml` | YAML 语法高亮文件名 |
@@ -337,6 +337,7 @@ QQ 群聊/C2C 会通过原生 Markdown payload 发送。其他平台会把同一
 
 | 配置项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
+| `enableRenderForwardCommand` | `boolean` | `true` | 是否启用 render-forward 指令（多实例部署时可关闭避免冲突） |
 | `maxForwardNestDepth` | `number` | `3` | 最大嵌套深度 |
 | `renderForwardDefaultStyle` | `source` / `lxgw` | `source` | 默认渲染风格 |
 | `renderForwardMaxImageSize` | `number` | `50` | 合并转发内图片长边最大显示尺寸 |

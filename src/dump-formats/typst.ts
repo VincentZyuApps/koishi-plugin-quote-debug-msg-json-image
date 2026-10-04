@@ -67,17 +67,17 @@ function toTypstColor(value: string | undefined, fallback: string): string {
 
 function buildTypstTheme(cfg: Config): TypstTheme {
   return {
-    pageBg: toTypstColor(cfg.dumpTypstPageBgColor, '#f9efe2'),
-    textColor: toTypstColor(cfg.dumpTypstTextColor, '#2f2f35'),
-    headerFill: toTypstColor(cfg.dumpTypstHeaderFillColor, '#fab8ba'),
-    headerStroke: toTypstColor(cfg.dumpTypstHeaderStrokeColor, '#f9b7a0'),
+    pageBg: toTypstColor(cfg.dumpTypstPageBgColor, '#f4f3f9'),
+    textColor: toTypstColor(cfg.dumpTypstTextColor, '#2d2b38'),
+    headerFill: toTypstColor(cfg.dumpTypstHeaderFillColor, '#5546a3'),
+    headerStroke: toTypstColor(cfg.dumpTypstHeaderStrokeColor, '#45378c'),
     headerText: toTypstColor(cfg.dumpTypstHeaderTextColor, '#ffffff'),
-    panelFill: toTypstColor(cfg.dumpTypstPanelFillColor, '#fffbf8'),
-    panelStroke: toTypstColor(cfg.dumpTypstPanelStrokeColor, '#f3efe5'),
-    sectionTitle: toTypstColor(cfg.dumpTypstSectionTitleColor, '#d0908c'),
-    codeBlockFill: toTypstColor(cfg.dumpTypstCodeBlockFillColor, '#ffffff'),
-    codeBlockStroke: toTypstColor(cfg.dumpTypstCodeBlockStrokeColor, '#edd6d0'),
-    statsText: toTypstColor(cfg.dumpTypstStatsTextColor, '#8788a5'),
+    panelFill: toTypstColor(cfg.dumpTypstPanelFillColor, '#ffffff'),
+    panelStroke: toTypstColor(cfg.dumpTypstPanelStrokeColor, '#e4e1f0'),
+    sectionTitle: toTypstColor(cfg.dumpTypstSectionTitleColor, '#5546a3'),
+    codeBlockFill: toTypstColor(cfg.dumpTypstCodeBlockFillColor, '#faf9fe'),
+    codeBlockStroke: toTypstColor(cfg.dumpTypstCodeBlockStrokeColor, '#e6e3f2'),
+    statsText: toTypstColor(cfg.dumpTypstStatsTextColor, '#7b7699'),
   }
 }
 
@@ -265,67 +265,64 @@ function generateTypstCode(formattedData: string, format: FormatType, theme: Typ
   size: 9pt
 )
 
+#set block(spacing: 8.5pt)
+
 #align(center)[
   #block(
     fill: ${theme.headerFill},
     stroke: 2pt + ${theme.headerStroke},
     radius: 6pt,
-    inset: 10pt,
-    width: 100%
+    inset: (x: 10pt, top: 7pt, bottom: 6pt),
+    width: 100%,
+    below: 8.5pt
   )[
-    #text(size: 16pt, weight: "bold", fill: ${theme.headerText})[
+    #set par(leading: 5.5pt)
+    #text(size: 15pt, weight: "bold", fill: ${theme.headerText})[
       📋 消息${escapedFormatName}调试
-    ]
-
-    #v(4pt)
-
-    #text(size: 10pt, fill: ${theme.headerText})[
+    ] \\
+    #text(size: 9.5pt, fill: ${theme.headerText})[
       ⏰ 查询时间: ${escapedTimestamp}
     ]
   ]
 ]
-
-#v(8pt)
 
 #block(
   fill: ${theme.panelFill},
   stroke: 1pt + ${theme.panelStroke},
   radius: 4pt,
   inset: 8pt,
-  width: 100%
+  width: 100%,
+  above: 0pt,
+  below: 8.5pt
 )[
   #text(weight: "bold", fill: ${theme.sectionTitle})[
     📝 ${escapedFormatName} 数据
   ]
-
-  #v(5pt)
-
+  #v(1.5pt)
 ${fence}${codeLang}
 ${codeContent}
 ${fence}
 
-  #v(5pt)
+  #v(3pt)
 
   #text(size: 9pt, fill: ${theme.statsText})[
     📏 总长度: ${formattedData.length} 字符
   ]
 ]
 
-#v(10pt)
-
 #align(center)[
   #block(
     fill: ${theme.panelFill},
     stroke: 0.5pt + ${theme.panelStroke},
     radius: 4pt,
-    inset: 6pt,
-    width: 100%
+    inset: (x: 8pt, top: 5pt, bottom: 5pt),
+    width: 100%,
+    above: 0pt
   )[
+    #set par(leading: 3pt)
     #text(size: 8pt, fill: ${theme.statsText})[
-      ${footerText}
-
-      🎨 Mode: *${messageMode}* · typst image
-
+      ${footerText} \\
+      🎨 Mode: *${messageMode}* · typst image \\
       ⏰ Time: ${escapedTimestamp}
     ]
   ]
