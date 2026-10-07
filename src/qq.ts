@@ -225,32 +225,43 @@ export async function resolveQQQuotedMessageObject(
     }
   }
 
-  if (quote?.content || quote?.id || quote?.messageId) {
-    return buildDebugObject('qq.session.quote', {
-      quote,
-    })
-  }
-
+  // 2. 如果存在引用的消息索引 refMsgIdx，尝试从内存缓存中拉取完整的历史消息
+  let cachedMessage: any = null
   if (refMsgIdx) {
-    const cached = qqMsgCache.get(refMsgIdx)
-    if (cached) {
+    cachedMessage = qqMsgCache.get(refMsgIdx)
+    if (cachedMessage) {
       return buildDebugObject('qq.msg_idx.memory_cache', {
         refMsgIdx,
-        cached,
-      })
-    }
-
-    if (d.message_type === QQ_MSG_TYPE_QUOTE && d.msg_elements?.[0]) {
-      return buildDebugObject('qq.raw.msg_elements[0]', {
-        refMsgIdx,
-        referencedElement: d.msg_elements[0],
-        currentMessage: {
+        cached: cachedMessage,
+        currentEvent: {
           id: d?.id || session.messageId || '',
           message_scene: d?.message_scene,
           message_reference: d?.message_reference,
         },
       })
     }
+  }
+
+  // 3. 检查当前原始事件中是否包含 msg_elements（例如 message_type: 103 引用消息）
+  const referencedElement = (d.message_type === QQ_MSG_TYPE_QUOTE || Array.isArray(d?.msg_elements))
+    ? d.msg_elements?.[0]
+    : undefined
+
+  // 4. 如果有 session.quote 或原始事件中的引用信息，组合输出丰富的调试结构
+  if (quote?.content || quote?.id || quote?.messageId || referencedElement || refMsgIdx) {
+    return buildDebugObject('qq.session.quote', {
+      quote: quote || null,
+      refMsgIdx: refMsgIdx || null,
+      referencedElement: referencedElement || null,
+      currentEvent: {
+        id: d?.id || session.messageId || '',
+        author: d?.author,
+        timestamp: d?.timestamp,
+        group_openid: d?.group_openid || d?.group_id,
+        message_scene: d?.message_scene,
+        message_reference: d?.message_reference,
+      },
+    })
   }
 
   if (verbose) {
